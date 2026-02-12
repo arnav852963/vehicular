@@ -18,4 +18,4 @@ console.log("firebase admin initialized");
 
 
 
-export  default admin
+export  {admin}
