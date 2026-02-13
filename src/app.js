@@ -27,6 +27,6 @@ app.use("/api/v1/auth",authRoutes)
 
 import userRoutes from "./routes/user.routes.js";
 
-app.use("/api/v1/users",userRoutes)
+app.use("/api/v1/user",userRoutes)
 
 export {app}

@@ -106,6 +106,7 @@ const logout = asyncHandler(async (req, res) => {
     if(!log) throw new ApiError(401, "log was not created")
     return res.status(200)
         .clearCookie('accessToken')
+        .clearCookie('refreshToken')
         .json(new ApiResponse(200 , req.user , "user logged out"));
 
 })
@@ -121,7 +122,7 @@ const updateAvatar = asyncHandler(async (req, res) => {
 
     const user = await User.findByIdAndUpdate(req?.user?._id  , {
         $set:{
-            refreshToken: upload_avatar?.url
+            avatar: upload_avatar?.url
         }
     } , {new:true}).select("-refreshToken")
 

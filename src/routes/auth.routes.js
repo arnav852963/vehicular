@@ -5,6 +5,6 @@ const authRoutes = Router();
 
 authRoutes.route("/firebaseAuth").post(firebaseAuth)
 
-authRoutes.route("/googleAuth").get(googleAuth)
+authRoutes.route("/googleAuth").post(googleAuth)
 
 export default authRoutes;

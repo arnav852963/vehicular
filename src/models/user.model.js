@@ -5,14 +5,14 @@ const userschema = new Schema({
 
     fullName:{
         type:String,
-        required:true,
+
         trim:true
     },
 
     username:{
         type:String,
 
-        unique:true,
+
         lowercase:true,
         trim:true
     },
