@@ -1,13 +1,21 @@
-import dotenv from "dotenv";
+import dotenv from "dotenv"
 dotenv.config({
   path: "./.env"
 })
 import {app} from "./app.js";
 import {db} from "./db/index.js";
 import {ApiError} from "./utilities/ApiError.js";
+import {httpserver} from "./app.js";
+
 
 db().then(()=>{
-  app.listen(process.env.PORT , ()=>{
+
+    httpserver.on('error' , (error) =>{
+
+        throw new ApiError(500 , `error is ${error.message}`)
+    })
+
+  httpserver.listen(process.env.PORT , ()=>{
     console.log("running at " , process.env.PORT);
   })
   app.on('error' , (error) =>{

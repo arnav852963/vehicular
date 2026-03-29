@@ -3,6 +3,11 @@ import dotenv from "dotenv"
 import cors from "cors"
 import cookie from "cookie-parser"
 
+import {createServer} from "http"
+import {Server} from "socket.io";
+
+
+
 
 
 dotenv.config({
@@ -10,6 +15,15 @@ dotenv.config({
 })
 
 const app =express();
+
+const httpserver = createServer(app)
+const io = new Server(httpserver , {
+    cors:{
+        origin:'*'
+    }
+})
+
+app.set('io' , io)
 
 app.use(cors({
     origin:process.env.CORS_ORIGIN,
@@ -21,6 +35,16 @@ app.use(express.urlencoded({extended:true,limit:'16kb'}));
 app.use(express.static("public"));
 app.use(cookie())
 
+app.use((err, req, res, next) => {
+    console.error(err);
+
+    res.status(err.statusCode || 500).json({
+        success: false,
+        message: err.message || "Internal Server Error",
+        errors: err.errors || []
+    });
+});
+
 import authRoutes from "./routes/auth.routes.js";
 
 app.use("/api/v1/auth",authRoutes)
@@ -29,4 +53,4 @@ import userRoutes from "./routes/user.routes.js";
 
 app.use("/api/v1/user",userRoutes)
 
-export {app}
+export {httpserver , app  , io}
