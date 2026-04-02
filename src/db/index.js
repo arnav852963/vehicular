@@ -4,6 +4,7 @@ dotenv.config({
     path:"./.env"
 })
 import {DB_NAME} from "../../DB_NAME.js";
+import {ApiError} from "../utilities/ApiError.js";
 
 export const db = async ()=>{
     try{
@@ -13,7 +14,7 @@ export const db = async ()=>{
         console.log(`connected to mongodb (db: ${DB_NAME})`);
     } catch (e) {
         console.log("error in mongodb connection" , e.message);
-        throw e;
+        throw new ApiError(500 , `error in mongodb connection -> ${e.message}`);
 
     }
 }

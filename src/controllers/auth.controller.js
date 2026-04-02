@@ -65,9 +65,14 @@ const googleAuth = asyncHandler(async (req, res) => {
     if(!idToken) throw new ApiError(400 , `id token is missing`);
     const decodedToken = await admin.auth().verifyIdToken(idToken);
     if(!decodedToken) throw new ApiError(400 , `token is unauthorised`);
+
+
+    console.log("decoded token from google auth controller" , decodedToken);
+
+
     const {name = "" , email = "" , picture = ""} = decodedToken;
 
-    console.log(decodedToken)
+
 
     if(!name) throw new ApiError(400 , `name is missing`);
     if(!email) throw new ApiError(400 , `email is missing`);
@@ -157,9 +162,9 @@ const firebaseAuth = asyncHandler(async (req, res) => {
     if(!idToken) throw new ApiError(400 , `id token is missing`);
     const decodedToken = await admin.auth().verifyIdToken(idToken);
     if(!decodedToken) throw new ApiError(400 , `token is unauthorised`);
-    const { email , email_verified} = decodedToken;
+    const { email} = decodedToken;
     if(!email) throw new ApiError(400 , `email is missing`);
-    if(!email_verified) throw new ApiError(400 , `email is not verified`);
+
 
     const exist = await User.findOne({
         email: email,

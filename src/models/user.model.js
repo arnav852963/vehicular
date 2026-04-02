@@ -28,10 +28,7 @@ const userschema = new Schema({
         type:String,
         default:null
     },
-    vehicles:[{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Vehicle"
-    }],
+
 
     avatar:{
         type:String,

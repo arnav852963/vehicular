@@ -19,11 +19,11 @@ const app =express();
 const httpserver = createServer(app)
 const io = new Server(httpserver , {
     cors:{
-        origin:'*'
+        origin:process.env.CORS_ORIGIN
     }
 })
 
-app.set('io' , io)
+
 
 app.use(cors({
     origin:process.env.CORS_ORIGIN,
@@ -52,5 +52,6 @@ app.use("/api/v1/auth",authRoutes)
 import userRoutes from "./routes/user.routes.js";
 
 app.use("/api/v1/user",userRoutes)
+
 
 export {httpserver , app  , io}
