@@ -53,5 +53,6 @@ import userRoutes from "./routes/user.routes.js";
 
 app.use("/api/v1/user",userRoutes)
 
-
+import vehicleRoutes from "./routes/vehicle.routes.js";
+app.use("/api/v1/vehicle",vehicleRoutes)
 export {httpserver , app  , io}

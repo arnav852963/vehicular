@@ -7,6 +7,7 @@ import {nanoid} from "nanoid";
 import QRCode from "qrcode";
 import {upload} from "../utilities/cloudinary.js";
 import {Vehicle} from "../models/vehicle.model.js";
+import {ChatSession} from "../models/chat.model.js";
 
 
 const createVehicle = asyncHandler(async (req, res) => {
@@ -142,6 +143,9 @@ const updateVehicleImage = asyncHandler(async (req, res) => {
             vehicleType: vehicle.vehicleType,
             plateNumber: vehicle.plateNumber,
         } }  )
+
+
+
         if(!log) throw new ApiError(400 , `log was not created for vehicle image update`)
     return res.status(200).json(new ApiResponse(200, vehicle, "vehicle image updated successfully"))
 
@@ -150,3 +154,105 @@ const updateVehicleImage = asyncHandler(async (req, res) => {
 
 
 })
+
+
+const deleteVehicle = asyncHandler(async (req, res) => {
+    const {vehicleId} = req?.params;
+    if (!vehicleId) throw new ApiError(400, "vehicleId is required");
+    if (!req?.user?._id) throw new ApiError(401, "user not logged in");
+
+    const vehicle = await Vehicle.findByIdAndDelete(vehicleId);
+    if (!vehicle) throw new ApiError(404, "vehicle not found");
+    if (vehicle.owner.toString() !== req?.user?._id.toString()) {
+        throw new ApiError(403, "you are not authorized to delete this vehicle");
+    }
+
+
+
+    const log = await AUDIT.create({
+        actorId: req?.user?._id,
+        ipAddress: req.ip,
+        action: 'VEHICLE_DELETED',
+        metadata: {
+            vehicleId: vehicle._id,
+            vehicleType: vehicle.vehicleType,
+            plateNumber: vehicle.plateNumber,
+        }
+    })
+
+
+    if(!log) throw new ApiError(400 , `log was not created for vehicle delete`)
+
+    return res.status(200).json(new ApiResponse(200, {vehicleId}, "vehicle deleted successfully"))
+})
+
+
+const qrScanned = asyncHandler(async (req, res) => {
+    const {qrId} = req?.params;
+
+    if(!qrId) throw new ApiError(400, "qrId is required");
+
+    const vehicle = await Vehicle.findOne({qrId: qrId})
+    if(!vehicle) throw new ApiError(404, "vehicle not found")
+
+    const log_1 = await AUDIT.create({
+        actorId: null,
+        ipAddress: req.ip,
+        action:'QR_SCANNED',
+        metadata:{
+            vehicleId: vehicle._id,
+            vehicleType: vehicle.vehicleType,
+            plateNumber: vehicle.plateNumber,
+        } }  )
+
+
+        if(!log_1) throw new ApiError(400 , `log was not created for qr scanned`)
+
+
+    const chatSession = await ChatSession.create({
+        vehicle: vehicle._id,
+        owner: vehicle.owner,
+        
+       
+
+
+
+    })
+    
+    if(!chatSession) throw new ApiError(500, "chat session was not created")
+    
+    const log_2 = await AUDIT.create({
+        actorId: null,
+        ipAddress: req.ip,
+        action:'CHAT_STARTED',
+        metadata:{
+            vehicleId: vehicle._id,
+            vehicleType: vehicle.vehicleType,
+            plateNumber: vehicle.plateNumber,
+            chatSessionId: chatSession._id
+        } }  )
+
+
+        if(!log_2) throw new ApiError(400 , `log was not created for chat session creation`)
+
+    return res.status(200).json(new ApiResponse(200, {
+        message: "QR code scanned successfully",
+        chatSessionId: chatSession._id
+    }, "QR code scanned successfully"))
+
+
+
+
+})
+
+
+export {
+    createVehicle,
+    getVehicle,
+    getAllUserVehicles,
+    updateVehicleImage,
+    deleteVehicle,
+    qrScanned,
+}
+
+
