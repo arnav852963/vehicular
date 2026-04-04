@@ -2,7 +2,7 @@ import {Router} from "express";
 import {
 	createVehicle,
 	deleteVehicle,
-	getAllUserVehicles,
+	getAllUserVehicles, getQr,
 	getVehicle,
 	qrScanned,
 	updateVehicleImage,
@@ -27,6 +27,7 @@ vehicleRoutes
 	.patch(jwt_auth, upload_mul.fields([{name: "vehicleImages", maxCount: 10}]), updateVehicleImage);
 
 vehicleRoutes.route("/delete/:vehicleId").delete(jwt_auth, deleteVehicle);
+vehicleRoutes.route("/getQr/:vehicleId").get(jwt_auth, getQr);
 
 
 

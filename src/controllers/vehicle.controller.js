@@ -101,6 +101,45 @@ const getVehicle = asyncHandler(async (req, res) => {
 })
 
 
+
+const getQr = asyncHandler(async (req, res) => {
+
+    const {vehicleId} = req?.params;
+
+    if (!vehicleId) throw new ApiError(400, "vehicleId is required");
+
+    const vehicle = await Vehicle.findById(vehicleId)
+    if (!vehicle) throw new ApiError(404, "vehicle not found")
+    if (vehicle.owner.toString() !== req?.user?._id.toString()) throw new ApiError(403, "you are not authorized to view this vehicle")
+
+
+    const frontendScanUrl = `${process.env.FRONTEND_URL}/scan/${vehicle?.qrId}`;
+
+    const qrImage = await QRCode.toDataURL(frontendScanUrl, {
+        errorCorrectionLevel: 'H',
+        margin: 2,
+        width: 300,
+        color: {
+            dark: '#000000',
+            light: '#ffffff'
+        }
+    });
+
+
+    return res.status(200).json(new ApiResponse(200, {
+
+        qrImage
+    }, "QR code retracted successfully"))
+
+
+
+
+
+
+
+})
+
+
 const getAllUserVehicles = asyncHandler(async (req, res) => {
     const vehicles = await Vehicle.find({owner: req?.user?._id})
     if(!vehicles) throw new ApiError(404, "cant fetch vehicles for this user")
@@ -253,6 +292,7 @@ export {
     updateVehicleImage,
     deleteVehicle,
     qrScanned,
+    getQr
 }
 
 
