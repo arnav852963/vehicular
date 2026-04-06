@@ -35,7 +35,13 @@ const chatModel = new Schema({
             type: Date,
             default: Date.now
         }
-    }]
+    }],
+
+    createdAt: {
+        type: Date,
+        default: Date.now,
+        expires: 86400 
+    }
 } , {timestamps: true});
 
 

@@ -8,12 +8,16 @@ import QRCode from "qrcode";
 import {upload} from "../utilities/cloudinary.js";
 import {Vehicle} from "../models/vehicle.model.js";
 import {ChatSession} from "../models/chat.model.js";
+import dotenv from "dotenv";
 
+dotenv.config({
+    path:"./.env"
+});
 
 const createVehicle = asyncHandler(async (req, res) => {
 
 
-    const {vehicleType , plateNumber ,  label} = req?.body
+    const {vehicleType , plateNumber ,  description} = req?.body
 
     if(!vehicleType || !vehicleType.trim()   || !plateNumber  || !plateNumber.trim() ) throw new ApiError(400 , "vehicleType and plateNumber are required");
 
@@ -50,7 +54,7 @@ const createVehicle = asyncHandler(async (req, res) => {
     const vehicle = await Vehicle.create({
         vehicleType,
         plateNumber,
-        label,
+        description,
         qrId: uniqueQrId,
         isActive: true,
         owner: req?.user?._id,
@@ -248,6 +252,8 @@ const qrScanned = asyncHandler(async (req, res) => {
         if(!log_1) throw new ApiError(400 , `log was not created for qr scanned`)
 
 
+
+
     const chatSession = await ChatSession.create({
         vehicle: vehicle._id,
         owner: vehicle.owner,
@@ -274,15 +280,21 @@ const qrScanned = asyncHandler(async (req, res) => {
 
         if(!log_2) throw new ApiError(400 , `log was not created for chat session creation`)
 
+    vehicle.owner = ""
+
     return res.status(200).json(new ApiResponse(200, {
-        message: "QR code scanned successfully",
-        chatSessionId: chatSession._id
+
+        guestSessionId: chatSession._id,
+        vehicleInfo: vehicle
     }, "QR code scanned successfully"))
 
 
 
 
 })
+
+
+
 
 
 export {

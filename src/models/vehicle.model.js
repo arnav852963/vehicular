@@ -2,8 +2,21 @@ import mongoose, { Schema } from "mongoose";
 
 const normalizePlateNumber = (value) => {
   if (typeof value !== "string") return value;
+  const raw = value.trim().toUpperCase();
+  let normalized = raw.replace(/[^A-Z0-9]/g, "");
 
-  return value.replace(/[\s-]/g, "").toUpperCase().trim();
+  if (normalized.startsWith("IND")) normalized = normalized.slice(3);
+
+  const standardPlate = /^[A-Z]{2}\d{2}(?![IO])[A-Z]{1,2}\d{4}$/;
+  const bhPlate = /^\d{2}BH\d{4}(?![IO])[A-Z]{2}$/;
+
+  if (!standardPlate.test(normalized) && !bhPlate.test(normalized)) {
+    throw new Error(
+      "Invalid Indian plate format. Expected e.g. MH12AB1234, DL01C1234, or BH format 22BH1234AA."
+    );
+  }
+
+  return normalized;
 };
 
 const vehicleSchema = new Schema(
@@ -42,7 +55,7 @@ const vehicleSchema = new Schema(
       match: [/^[A-Z0-9]{8}$/, "qrId must be exactly 8 characters"],
     },
 
-    label: {
+    description: {
       type: String,
       trim: true,
       default: null,
