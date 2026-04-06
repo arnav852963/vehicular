@@ -6,9 +6,20 @@ import {app} from "./app.js";
 import {db} from "./db/index.js";
 import {ApiError} from "./utilities/ApiError.js";
 import {httpserver} from "./app.js";
+import {transporter} from "./utilities/mailer.js";
 
+db().then(  async ()=>{
 
-db().then(()=>{
+    try {
+
+        await transporter.verify()
+        console.log("mail transporter is ready to send mails");
+
+    } catch (e) {
+
+        console.log("error in mail transporter " , e.message);
+
+    }
 
     httpserver.on('error' , (error) =>{
 
