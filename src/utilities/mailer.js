@@ -15,7 +15,7 @@ export const transporter = nodemailer.createTransport({
 
 export const generateAlertEmail = (ownerEmail, plateNumber, messageText, sessionId) => {
 
-    const chatLink = `http://localhost:5173/dashboard?session=${sessionId}`;
+    const chatLink = `http://localhost:5173/chat/${sessionId}`;
 
     return {
         from: `"ParkAlert System" <${process.env.EMAIL_USER}>`,
