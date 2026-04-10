@@ -4,7 +4,7 @@ import {
     getUser,
     refreshAccessToken,
     completeProfile,
-    updateAvatar,
+    updateAvatar, getUserChatSessions,
 } from "../controllers/user.controller.js";
 import { jwt_auth} from "../middlewares/auth.middleware.js";
 import {upload_mul} from "../middlewares/multer.middleware.js";
@@ -19,5 +19,6 @@ userRoutes.route("/updateAvatar").patch(jwt_auth , upload_mul.single("avatar") ,
 userRoutes.route("/getUser").get( jwt_auth, getUser);
 userRoutes.route("/updateProfile").patch( jwt_auth, completeProfile);
 userRoutes.route("/logout").patch( jwt_auth , logout);
+userRoutes.route("getUserChats").get(jwt_auth , getUserChatSessions);
 
 export default userRoutes;

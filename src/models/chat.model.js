@@ -15,10 +15,10 @@ const chatModel = new Schema({
 
 
 
-    message:[{
+    messages:[{
         senderType:{
             type: String,
-            enum: ['Owner', 'guest'],
+            enum: ['owner', 'guest'],
             required: true
         },
         message:{
@@ -26,11 +26,7 @@ const chatModel = new Schema({
              required: true
 
         },
-        attachment:{
-            type: String,
-        }
 
-        ,
         timestamp:{
             type: Date,
             default: Date.now

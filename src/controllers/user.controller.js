@@ -5,11 +5,12 @@ import {asyncHandler} from "../utilities/asyncHandler.js";
 import {AUDIT} from "../models/auditlogs.model.js";
 import {createAccessRefreshToken} from "./auth.controller.js";
 import {upload} from "../utilities/cloudinary.js";
-
+import {ChatSession} from "../models/chat.model.js";
 
 
 import jwt from 'jsonwebtoken';
 import dotenv from "dotenv";
+import mongoose from "mongoose";
 
 dotenv.config({
     path: "./.env",
@@ -75,7 +76,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
     return res.status(200)
         .cookie('accessToken' , accessToken  , {http:true , secure:true})
-        .json(new ApiResponse(200 , {accessToken: accessToken} , "token refreshed" ));
+        .json(new ApiResponse(200 , {} , "token refreshed" ));
 
 
 
@@ -136,7 +137,43 @@ const updateAvatar = asyncHandler(async (req, res) => {
 
 })
 
-export {logout , getUser, refreshAccessToken , completeProfile , updateAvatar}
+const getUserChatSessions = asyncHandler(async (req, res) => {
+
+    const userChats  = await User.aggregate([{
+        $match:{
+            _id: new mongoose.Types.ObjectId(req?.user?._id)
+        }
+    } , {
+        $lookup:{
+            from:"chatsessions",
+            localField:"_id",
+            foreignField:"owner",
+            as:"chats"
+        }
+
+
+
+    } , {
+
+        $project:{
+
+            chats: 1
+
+
+        }
+    }])
+
+    if(!userChats || userChats.length === 0) throw new ApiError(404, "no chat sessions found for user");
+
+
+
+    const {chats} = userChats[0]
+
+    return res.status(200).json(new ApiResponse(200, chats  , "user chat sessions retracted"));
+
+})
+
+export {logout , getUser, refreshAccessToken , completeProfile , updateAvatar , getUserChatSessions}
 
 
 
