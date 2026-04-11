@@ -2,6 +2,7 @@ import {ChatSession} from "../models/chat.model.js";
 import {ApiError} from "../utilities/ApiError.js";
 import {asyncHandler} from "../utilities/asyncHandler.js";
 import {ApiResponse} from "../utilities/ApiResponse.js";
+import mongoose from "mongoose";
 
 
 
@@ -11,13 +12,32 @@ export const getChatSession = asyncHandler(async (req, res) => {
 
     if(!sessionId) throw new ApiError(400, "sessionId is required");
 
-    const chatSession = await ChatSession.findById(sessionId).select("-vehicleId -owner -createdAt")
+    const chatSession = await ChatSession.aggregate([{
+        $match:{
+            _id: new mongoose.Types.ObjectId(sessionId)
+        }
+    } , {
+
+        $lookup:{
+            from: "vehicles",
+            localField: "vehicleId",
+            foreignField: "_id",
+            pipeline:[{
+                $project: {
+                    plateNumber: 1,
+                }
+
+            }],
+            as: "vehicleInfo"
+        }
+
+    }])
     if (!chatSession) throw new ApiError(404, "chat session not found")
 
 
     const {messages} = chatSession;
 
-    return res.status(200).json(new ApiResponse(200, messages, "chat session retrieved successfully"))
+    return res.status(200).json(new ApiResponse(200, { messages , plateNumber : chatSession?.vehicleInfo?.plateNumber }, "chat session retrieved successfully"))
 })
 
 

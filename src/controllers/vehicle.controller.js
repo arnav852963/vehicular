@@ -326,7 +326,7 @@ const qrScanned = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, {
 
         guestSessionId: chatSession._id,
-        vehicleInfo: vehicle
+
     }, "QR code scanned successfully"))
 
 
