@@ -20,3 +20,24 @@ export const getChatSession = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, messages, "chat session retrieved successfully"))
 })
 
+
+
+export const addMessageToChatSession = asyncHandler(async (req, res) => {
+    const message = req?.body?.message;
+    const {sessionId} = req?.params;
+
+    if(!sessionId) throw new ApiError(400, "sessionId is required");
+    if(!message) throw new ApiError(400, "message is required");
+
+    const chatSession = await ChatSession.findByIdAndUpdate(sessionId , {
+        $push:{
+            messages: message
+        }
+
+    } , {new: true})
+
+    if(!chatSession) throw new ApiError(404, "chat session not found")
+
+    return res.status(200).json(new ApiResponse(200,{}, "message added to chat session successfully"))
+
+})
