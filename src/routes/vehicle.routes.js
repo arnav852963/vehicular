@@ -3,7 +3,7 @@ import {
 	createVehicle,
 	deleteVehicle,
 	getAllUserVehicles, getQr,
-	getVehicle,
+	getVehicle, getVehicleByQrId,
 	qrScanned,
 	updateVehicleImage,
 } from "../controllers/vehicle.controller.js";
@@ -32,5 +32,6 @@ vehicleRoutes.route("/getQr/:vehicleId").get(jwt_auth, getQr);
 
 
 vehicleRoutes.route("/qrScanned/:qrId").post(qrScanned);
+vehicleRoutes.route("/getVehicleByQrId/:qrId").get(getVehicleByQrId);
 
 export default vehicleRoutes;

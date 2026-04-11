@@ -9,6 +9,8 @@ import {upload} from "../utilities/cloudinary.js";
 import {Vehicle} from "../models/vehicle.model.js";
 import {ChatSession} from "../models/chat.model.js";
 import dotenv from "dotenv";
+import {generateAlertEmail, transporter} from "../utilities/mailer.js";
+
 
 dotenv.config({
     path:"./.env"
@@ -235,8 +237,27 @@ const qrScanned = asyncHandler(async (req, res) => {
 
     if(!qrId) throw new ApiError(400, "qrId is required");
 
-    const vehicle = await Vehicle.findOne({qrId: qrId})
-    if(!vehicle) throw new ApiError(404, "vehicle not found")
+    const {message} = req?.body
+    if(!message) throw new ApiError(400, "message must be a string")
+
+    const [vehicle] = await Vehicle.aggregate([{
+        $match:{
+            "qrId": qrId
+        }
+
+
+    } , {
+
+        $lookup:{
+            from:"users",
+            localField:"owner",
+            foreignField:"_id",
+            as:"ownerInfo"
+        }
+
+
+    }])
+    if(!vehicle ) throw new ApiError(404, "vehicle not found")
 
     const log_1 = await AUDIT.create({
         actorId: null,
@@ -257,6 +278,7 @@ const qrScanned = asyncHandler(async (req, res) => {
     const chatSession = await ChatSession.create({
         vehicle: vehicle._id,
         owner: vehicle.owner,
+        messages:[message]
         
        
 
@@ -280,7 +302,26 @@ const qrScanned = asyncHandler(async (req, res) => {
 
         if(!log_2) throw new ApiError(400 , `log was not created for chat session creation`)
 
-    vehicle.owner = ""
+
+
+
+
+
+
+    const mailOptions = generateAlertEmail(vehicle?.ownerInfo?.email , vehicle?.plateNumber , message?.message || "" , chatSession?._id)
+
+
+    try {
+            const info = await transporter.sendMail(mailOptions)
+            if(!info) throw new ApiError(500, "error in sending email")
+
+    } catch (e){
+
+            throw new ApiError(500, "error in sending alert email to vehicle owner")
+
+    }
+
+
 
     return res.status(200).json(new ApiResponse(200, {
 
@@ -293,7 +334,21 @@ const qrScanned = asyncHandler(async (req, res) => {
 
 })
 
+const getVehicleByQrId = asyncHandler(async (req, res) => {
+    const {qrId} = req?.params;
 
+    if(!qrId) throw new ApiError(400, "qrId is required");
+
+    const vehicle = await Vehicle.findOne({qrId}).projection({
+        plateNumber: 1
+    })
+    if(!vehicle) throw new ApiError(404, "vehicle not found")
+
+    return res.status(200).json(new ApiResponse(200, vehicle, "vehicle retracted successfully"))
+
+
+
+})
 
 
 
@@ -304,7 +359,8 @@ export {
     updateVehicleImage,
     deleteVehicle,
     qrScanned,
-    getQr
+    getQr,
+    getVehicleByQrId
 }
 
 
