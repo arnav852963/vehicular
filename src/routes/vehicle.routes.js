@@ -24,7 +24,7 @@ vehicleRoutes.route("/getAll").get(jwt_auth, getAllUserVehicles);
 
 vehicleRoutes
 	.route("/updateVehicleImage/:vehicleId")
-	.patch(jwt_auth, upload_mul.fields([{name: "vehicleImages", maxCount: 10}]), updateVehicleImage);
+	.post(jwt_auth, upload_mul.fields([{name: "vehicleImages", maxCount: 10}]), updateVehicleImage);
 
 vehicleRoutes.route("/delete/:vehicleId").delete(jwt_auth, deleteVehicle);
 vehicleRoutes.route("/getQr/:vehicleId").get(jwt_auth, getQr);
