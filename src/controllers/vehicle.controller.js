@@ -10,6 +10,7 @@ import {Vehicle} from "../models/vehicle.model.js";
 import {ChatSession} from "../models/chat.model.js";
 import dotenv from "dotenv";
 import {generateAlertEmail, transporter} from "../utilities/mailer.js";
+import {io} from "../app.js";
 
 
 dotenv.config({
@@ -79,7 +80,7 @@ const createVehicle = asyncHandler(async (req, res) => {
     if(!log) throw new ApiError(400 , `log was not created for vehicle creation`)
 
     return res.status(201).json(new ApiResponse(201 , {
-        vehicleId: vehicle._id,
+        vehicleId: vehicle._id.toString(),
         qrId: vehicle.qrId,
         qrImage
     } , "vehicle created successfully"))
@@ -303,6 +304,11 @@ const qrScanned = asyncHandler(async (req, res) => {
         if(!log_2) throw new ApiError(400 , `log was not created for chat session creation`)
 
 
+    io.to(vehicle.owner.toString()).emit('Alert' , {
+        sessionId : chatSession._id.toString()
+    })
+
+
 
 
 
@@ -325,7 +331,7 @@ const qrScanned = asyncHandler(async (req, res) => {
 
     return res.status(200).json(new ApiResponse(200, {
 
-        guestSessionId: chatSession._id,
+        guestSessionId: chatSession._id.toString(),
 
     }, "QR code scanned successfully"))
 

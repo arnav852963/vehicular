@@ -12,7 +12,7 @@ export const getChatSession = asyncHandler(async (req, res) => {
 
     if(!sessionId) throw new ApiError(400, "sessionId is required");
 
-    const chatSession = await ChatSession.aggregate([{
+    const [chatSession] = await ChatSession.aggregate([{
         $match:{
             _id: new mongoose.Types.ObjectId(sessionId)
         }
@@ -35,7 +35,7 @@ export const getChatSession = asyncHandler(async (req, res) => {
     if (!chatSession) throw new ApiError(404, "chat session not found")
 
 
-    const {messages} = chatSession;
+    const {messages=[]} = chatSession;
 
     return res.status(200).json(new ApiResponse(200, { messages , plateNumber : chatSession?.vehicleInfo?.plateNumber }, "chat session retrieved successfully"))
 })
