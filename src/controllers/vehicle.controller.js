@@ -11,7 +11,7 @@ import {ChatSession} from "../models/chat.model.js";
 import dotenv from "dotenv";
 import {generateAlertEmail, transporter} from "../utilities/mailer.js";
 import {io} from "../app.js";
-
+import { customAlphabet } from "nanoid";
 
 dotenv.config({
     path:"./.env"
@@ -27,7 +27,9 @@ const createVehicle = asyncHandler(async (req, res) => {
     if(!req?.user) throw new ApiError(400, "user not logged in");
 
 
-    const uniqueQrId = nanoid(8);
+    const nanoidUpperAlnum = customAlphabet("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ", 8)
+
+    const uniqueQrId = nanoidUpperAlnum()
 
 
     const frontendScanUrl = `${process.env.FRONTEND_URL}/scan/${uniqueQrId}`;
@@ -80,9 +82,7 @@ const createVehicle = asyncHandler(async (req, res) => {
     if(!log) throw new ApiError(400 , `log was not created for vehicle creation`)
 
     return res.status(201).json(new ApiResponse(201 , {
-        vehicleId: vehicle._id.toString(),
-        qrId: vehicle.qrId,
-        qrImage
+
     } , "vehicle created successfully"))
 
 
@@ -150,7 +150,7 @@ const getQr = asyncHandler(async (req, res) => {
 const getAllUserVehicles = asyncHandler(async (req, res) => {
     const vehicles = await Vehicle.find({owner: req?.user?._id})
     if(!vehicles) throw new ApiError(404, "cant fetch vehicles for this user")
-    if(vehicles?.length === 0) throw new ApiError(404, "no vehicles found for this user")
+
     return res.status(200).json(new ApiResponse(200, vehicles, "vehicles retracted successfully"))
 })
 

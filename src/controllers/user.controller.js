@@ -163,7 +163,7 @@ const getUserChatSessions = asyncHandler(async (req, res) => {
         }
     }])
 
-    if(!userChats || userChats.length === 0) throw new ApiError(404, "no chat sessions found for user");
+    if(!userChats || userChats?.length === 0) throw new ApiError(404, "no chat sessions found for user");
 
 
 

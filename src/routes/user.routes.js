@@ -19,6 +19,6 @@ userRoutes.route("/updateAvatar").patch(jwt_auth , upload_mul.single("avatar") ,
 userRoutes.route("/getUser").get( jwt_auth, getUser);
 userRoutes.route("/updateProfile").post( jwt_auth, completeProfile);
 userRoutes.route("/logout").post( jwt_auth , logout);
-userRoutes.route("getUserChats").get(jwt_auth , getUserChatSessions);
+userRoutes.route("/getUserChats").get(jwt_auth , getUserChatSessions);
 
 export default userRoutes;
