@@ -251,8 +251,10 @@ const qrScanned = asyncHandler(async (req, res) => {
 
     if(!qrId) throw new ApiError(400, "qrId is required");
 
-    const {message} = req?.body
+    const message = req?.body
     if(!message) throw new ApiError(400, "message must be a string")
+
+    message.timestamp = new Date().toLocaleString()
 
     const [vehicle] = await Vehicle.aggregate([{
         $match:{
@@ -290,7 +292,7 @@ const qrScanned = asyncHandler(async (req, res) => {
 
 
     const chatSession = await ChatSession.create({
-        vehicle: vehicle._id,
+        vehicleId: vehicle._id,
         owner: vehicle.owner,
         messages:[message]
         
@@ -317,9 +319,6 @@ const qrScanned = asyncHandler(async (req, res) => {
         if(!log_2) throw new ApiError(400 , `log was not created for chat session creation`)
 
 
-    io.to(vehicle.owner.toString()).emit('Alert' , {
-        sessionId : chatSession._id.toString()
-    })
 
 
 
@@ -327,7 +326,8 @@ const qrScanned = asyncHandler(async (req, res) => {
 
 
 
-    const mailOptions = generateAlertEmail(vehicle?.ownerInfo?.email , vehicle?.plateNumber , message?.message || "" , chatSession?._id)
+
+    const mailOptions = generateAlertEmail(vehicle?.ownerInfo[0]?.email , vehicle?.plateNumber , message?.message || "" , chatSession?._id)
 
 
     try {
@@ -340,11 +340,13 @@ const qrScanned = asyncHandler(async (req, res) => {
 
     }
 
-
+    io.to(vehicle.owner.toString()).emit('Alert' , {
+        sessionId : chatSession._id.toString()
+    })
 
     return res.status(200).json(new ApiResponse(200, {
 
-        guestSessionId: chatSession._id.toString(),
+        sessionId: chatSession._id.toString(),
 
     }, "QR code scanned successfully"))
 
@@ -358,9 +360,7 @@ const getVehicleByQrId = asyncHandler(async (req, res) => {
 
     if(!qrId) throw new ApiError(400, "qrId is required");
 
-    const vehicle = await Vehicle.findOne({qrId}).projection({
-        plateNumber: 1
-    })
+    const vehicle = await Vehicle.findOne({qrId}).select("plateNumber")
     if(!vehicle) throw new ApiError(404, "vehicle not found")
 
     return res.status(200).json(new ApiResponse(200, vehicle, "vehicle retracted successfully"))

@@ -17,9 +17,12 @@ dotenv.config({
 const app =express();
 
 const httpserver = createServer(app)
+
+
+const  allowedOrigins = [process.env.CORS_ORIGIN , process.env.NETWORK_ORIGIN]
 const io = new Server(httpserver , {
     cors:{
-        origin:process.env.CORS_ORIGIN,
+        origin:allowedOrigins,
         credentials:true
     }
 })
@@ -27,7 +30,7 @@ const io = new Server(httpserver , {
 
 
 app.use(cors({
-    origin:process.env.CORS_ORIGIN,
+    origin:allowedOrigins,
     credentials:true
 }));
 

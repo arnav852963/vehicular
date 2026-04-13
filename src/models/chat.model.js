@@ -28,8 +28,8 @@ const chatModel = new Schema({
         },
 
         timestamp:{
-            type: Date,
-            default: Date.now
+            type: String,
+            default: new Date().toLocaleString()
         }
     }],
 

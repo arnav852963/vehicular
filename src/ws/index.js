@@ -17,20 +17,27 @@ console.log(process.env.ACCESS_TOKEN_SECRET)
 io.use(async (socket , next) =>{
 
     const sessionId = socket?.handshake?.auth?.sessionId || null
+    if(!sessionId) console.log("reached here")
 
 
 
 
     const rawCookies   = socket?.handshake?.headers?.cookie;
 
+    console.loog("raw cookies " , rawCookies)
+
     if(rawCookies) {
         try {
 
 
         const cookies = cookie.parse(rawCookies)
+
+            console.log("parsed cookies " , cookies?.accessToken)
         if (!cookies) return  next(new ApiError(400, "cant parse the cookie"))
 
         const decodeToken = await jwt.verify(cookies?.accessToken, process.env.ACCESS_TOKEN_SECRET)
+
+            console.log("decoded token " , decodeToken)
         if (!decodeToken) return  next( new ApiError(401, "Unauthorized"))
 
         socket.userType = 'owner'
