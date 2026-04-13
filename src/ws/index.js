@@ -16,7 +16,7 @@ console.log(process.env.ACCESS_TOKEN_SECRET)
 
 io.use(async (socket , next) =>{
 
-    const sessionId = socket?.handshake?.auth?.sessionId || null
+    const {sessionId =''} = socket?.handshake?.auth || {};
     if(!sessionId) console.log("reached here")
 
 
@@ -24,7 +24,7 @@ io.use(async (socket , next) =>{
 
     const rawCookies   = socket?.handshake?.headers?.cookie;
 
-    console.loog("raw cookies " , rawCookies)
+
 
     if(rawCookies) {
         try {

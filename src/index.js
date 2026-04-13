@@ -7,6 +7,7 @@ import {db} from "./db/index.js";
 import {ApiError} from "./utilities/ApiError.js";
 import {httpserver} from "./app.js";
 import {transporter} from "./utilities/mailer.js";
+import "./ws/index.js";
 
 db().then(  async ()=>{
 
