@@ -93,8 +93,8 @@ socket.on('client_action' , (payload , callback)=>{
 
     socketHandler(io , socket)
 
-    socket.on('DISCONNECTED' , ()=>{
-    socket.emit('Disconnected' )
+    socket.on('disconnect' , ()=>{
+    socket.emit('DISCONNECTED' )
     })
 
 
