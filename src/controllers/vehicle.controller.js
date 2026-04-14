@@ -323,7 +323,9 @@ const qrScanned = asyncHandler(async (req, res) => {
 
 
 
-
+    io.to(vehicle.owner.toString()).emit('ALERT' , {
+        sessionId : chatSession._id.toString()
+    })
 
 
 
@@ -340,9 +342,7 @@ const qrScanned = asyncHandler(async (req, res) => {
 
     }
 
-    io.to(vehicle.owner.toString()).emit('Alert' , {
-        sessionId : chatSession._id.toString()
-    })
+
 
     return res.status(200).json(new ApiResponse(200, {
 

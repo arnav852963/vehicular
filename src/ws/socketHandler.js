@@ -25,12 +25,14 @@ export const socketHandler =  (io , socket) =>{
 
                 try {
 
+
+
                     const newMessage = await ChatSession.findByIdAndUpdate(sessionId, {
                         $push: {
                             messages: {
                                 senderType: socket?.userType,
                                 message: text,
-                                timestamp: new Date.toLocaleString()
+                                timestamp: new Date().toLocaleString()
                             }
                         }
 
@@ -63,7 +65,7 @@ export const socketHandler =  (io , socket) =>{
 
         switch (payload?.type) {
 
-            case "Typing":{
+            case "TYPING":{
                 socket.to(socket?.sessionId).emit("TYPING" )
 
                 break;

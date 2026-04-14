@@ -17,7 +17,7 @@ console.log(process.env.ACCESS_TOKEN_SECRET)
 io.use(async (socket , next) =>{
 
     const {sessionId =''} = socket?.handshake?.auth || {};
-    if(!sessionId) console.log("reached here")
+
 
 
 
@@ -32,12 +32,12 @@ io.use(async (socket , next) =>{
 
         const cookies = cookie.parse(rawCookies)
 
-            console.log("parsed cookies " , cookies?.accessToken)
+
         if (!cookies) return  next(new ApiError(400, "cant parse the cookie"))
 
         const decodeToken = await jwt.verify(cookies?.accessToken, process.env.ACCESS_TOKEN_SECRET)
 
-            console.log("decoded token " , decodeToken)
+
         if (!decodeToken) return  next( new ApiError(401, "Unauthorized"))
 
         socket.userType = 'owner'
@@ -50,6 +50,8 @@ io.use(async (socket , next) =>{
             return next( new ApiError(500 , e.message) )
         }
     } else{
+
+        console.log("no cookies found in the handshake")
 
         socket.userType ='guest'
         socket.sessionId = sessionId
@@ -68,6 +70,8 @@ io.on('connection' , (socket) =>{
 console.log("a user connected with id " , socket.id , "  type " , socket?.userType );
 
 if(socket.userType === 'owner'){
+
+    console.log("joining room with id " , socket?.userId)
     socket.join(socket?.userId)
 
 }
@@ -79,6 +83,7 @@ socket.on('client_action' , (payload , callback)=>{
         }
 
         socket.join(payload?.payload?.sessionId)
+        console.log("session id joined" , socket.userType)
         socket.sessionId = payload?.payload?.sessionId
         callback({success:true })
     }
@@ -88,8 +93,8 @@ socket.on('client_action' , (payload , callback)=>{
 
     socketHandler(io , socket)
 
-    socket.on('disconnect' , ()=>{
-    console.log("user disconnected with id " , socket.id)
+    socket.on('DISCONNECTED' , ()=>{
+    socket.emit('Disconnected' )
     })
 
 
