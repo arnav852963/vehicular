@@ -117,6 +117,8 @@ const getVehicle = asyncHandler(async (req, res) => {
         }
     });
 
+    console.log(qrImage)
+
     return res.status(200).json(new ApiResponse(200, {vehicle , qrImage}, "vehicle retracted successfully"))
 })
 
