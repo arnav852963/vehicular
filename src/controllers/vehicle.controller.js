@@ -94,6 +94,31 @@ const createVehicle = asyncHandler(async (req, res) => {
 
 })
 
+const activateDeactivateVehicleQr = asyncHandler(async (req, res) => {
+
+    const {vehicleId} = req?.params;
+
+    if (!vehicleId) throw new ApiError(400, "vehicleId is required");
+
+    const vehicle = await Vehicle.findByIdAndUpdate(vehicleId , {
+        $set:{
+            activateQr: !vehicle?.activateQr
+        }
+    } , {new:true} ).select("activateQr")
+    if (!vehicle) throw new ApiError(404, "vehicle not found")
+    if (vehicle.owner.toString() !== req?.user?._id.toString()) throw new ApiError(403, "you are not authorized to update this vehicle")
+
+    const {activateQr} = vehicle;
+
+    return res.status(200).json(new ApiResponse(200, activateQr, `vehicle QR code ${vehicle?.activateQr ? "activated" : "deactivated"} successfully`))
+
+
+
+
+})
+
+
+
 const getVehicle = asyncHandler(async (req, res) => {
 
     const {vehicleId} = req?.params;
@@ -253,11 +278,6 @@ const qrScanned = asyncHandler(async (req, res) => {
 
     if(!qrId) throw new ApiError(400, "qrId is required");
 
-    const message = req?.body
-    if(!message) throw new ApiError(400, "message must be a string")
-
-    message.timestamp = new Date().toLocaleString()
-
     const [vehicle] = await Vehicle.aggregate([{
         $match:{
             "qrId": qrId
@@ -276,6 +296,14 @@ const qrScanned = asyncHandler(async (req, res) => {
 
     }])
     if(!vehicle ) throw new ApiError(404, "vehicle not found")
+    if(!vehicle?.activateQr) throw new ApiError(403, "QR code for this vehicle is deactivated")
+
+    const message = req?.body
+    if(!message) throw new ApiError(400, "message must be a string")
+
+    message.timestamp = new Date().toLocaleString()
+
+
 
     const log_1 = await AUDIT.create({
         actorId: null,
@@ -381,7 +409,8 @@ export {
     deleteVehicle,
     qrScanned,
     getQr,
-    getVehicleByQrId
+    getVehicleByQrId,
+    activateDeactivateVehicleQr
 }
 
 

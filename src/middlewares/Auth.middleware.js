@@ -1,14 +1,15 @@
 import {ApiError} from "../utilities/ApiError.js";
 import jwt from 'jsonwebtoken';
+import {asyncHandler} from "../utilities/asyncHandler.js";
 
-export  const  jwt_auth = async (req, _ , next) => {
+export  const  jwt_auth = asyncHandler( async (req, _ , next) => {
 
     try {
 
         const token =   req?.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "");
-        if(!token) return next(new ApiError(500, "Token not found  , please login"));
+        if(!token) throw new ApiError(500, "Token not found  , please login");
         const decodedToken = await jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-        if(!decodedToken) next( new ApiError(500, "unauthorised token , unsecure"));
+        if(!decodedToken) throw new ApiError(500, "unauthorised token , unsecure");
 
         req.user = decodedToken;
         next();
@@ -18,7 +19,7 @@ export  const  jwt_auth = async (req, _ , next) => {
 
     } catch (e){
         console.log("error in jwt_auth" , e.message);
-        next( new ApiError(500,`error in jwt_auth ${e.message}`));
+        throw new ApiError(500,`error in jwt_auth ${e.message}`);
 
     }
-}
+})

@@ -29,7 +29,7 @@ db().then(  async ()=>{
 
   httpserver.listen(process.env.PORT , ()=>{
     console.log("running at " , process.env.PORT);
-    console.log(" access db at " , process.env.MONGO_UI)
+
   })
   app.on('error' , (error) =>{
     console.log("error for listening " , error);

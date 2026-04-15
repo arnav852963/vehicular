@@ -1,5 +1,6 @@
 import {Router} from "express";
 import {
+	activateDeactivateVehicleQr,
 	createVehicle,
 	deleteVehicle,
 	getAllUserVehicles, getQr,
@@ -33,5 +34,6 @@ vehicleRoutes.route("/getQr/:vehicleId").get(jwt_auth, getQr);
 
 vehicleRoutes.route("/qrScanned/:qrId").post(qrScanned);
 vehicleRoutes.route("/getVehicleByQrId/:qrId").get(getVehicleByQrId);
+vehicleRoutes.route("/activateQr/:vehicleId").patch(jwt_auth, activateDeactivateVehicleQr);
 
 export default vehicleRoutes;

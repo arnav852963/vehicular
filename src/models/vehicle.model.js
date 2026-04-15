@@ -21,12 +21,19 @@ const normalizePlateNumber = (value) => {
 
 const vehicleSchema = new Schema(
   {
+
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
       index: true,
     },
+
+
+      activateQr:{
+        type: Boolean,
+        default: true
+      },
     vehicleType: {
       type: String,
       required: true,
