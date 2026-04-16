@@ -27,6 +27,12 @@ const chatModel = new Schema({
 
         },
 
+        vehicleImage:{
+            type: String,
+
+
+        },
+
         timestamp:{
             type: String,
             default: new Date().toLocaleString()

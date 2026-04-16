@@ -95,17 +95,21 @@ const createVehicle = asyncHandler(async (req, res) => {
 })
 
 const activateDeactivateVehicleQr = asyncHandler(async (req, res) => {
-
+console.log(req?.body)
     const {vehicleId} = req?.params;
+    const {activate} = req?.body;
+    if(activate.toString() === undefined) throw new ApiError(400, "activate field is required in body and must be a boolean")
 
     if (!vehicleId) throw new ApiError(400, "vehicleId is required");
 
     const vehicle = await Vehicle.findByIdAndUpdate(vehicleId , {
         $set:{
-            activateQr: !vehicle?.activateQr
+            activateQr: !activate
         }
-    } , {new:true} ).select("activateQr")
+    } , {new:true} ).select("activateQr owner")
     if (!vehicle) throw new ApiError(404, "vehicle not found")
+
+
     if (vehicle.owner.toString() !== req?.user?._id.toString()) throw new ApiError(403, "you are not authorized to update this vehicle")
 
     const {activateQr} = vehicle;
@@ -302,6 +306,19 @@ const qrScanned = asyncHandler(async (req, res) => {
     if(!message) throw new ApiError(400, "message must be a string")
 
     message.timestamp = new Date().toLocaleString()
+
+
+    const captured_local = req?.file ? req?.file?.path : ""
+    if (!captured_local) throw new ApiError(400, "captured image is required")
+
+    const captured_upload = await upload(captured_local);
+
+    if (!captured_upload?.url) throw new ApiError(400, "uploaded image is required")
+
+    message.vehicleImage = captured_upload?.url
+
+
+
 
 
 
