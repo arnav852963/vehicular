@@ -12,6 +12,7 @@ import dotenv from "dotenv";
 import {generateAlertEmail, transporter} from "../utilities/mailer.js";
 import {io} from "../app.js";
 import { customAlphabet } from "nanoid";
+import {detectVehicle} from "../utilities/cloudvision.js";
 
 dotenv.config({
     path:"./.env"
@@ -314,6 +315,10 @@ const qrScanned = asyncHandler(async (req, res) => {
     const captured_upload = await upload(captured_local);
 
     if (!captured_upload?.url) throw new ApiError(400, "uploaded image is required")
+
+    const isVehicle = await detectVehicle(captured_upload?.url)
+    if(isVehicle.error) throw new ApiError(400, isVehicle.message)
+    if(!isVehicle.isVehicle) throw new ApiError(400, "no vehicle detected in the captured image")
 
     message.vehicleImage = captured_upload?.url
 
