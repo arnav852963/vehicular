@@ -278,6 +278,11 @@ const deleteVehicle = asyncHandler(async (req, res) => {
 })
 
 
+
+
+
+
+
 const qrScanned = asyncHandler(async (req, res) => {
     const {qrId} = req?.params;
 
@@ -303,10 +308,13 @@ const qrScanned = asyncHandler(async (req, res) => {
     if(!vehicle ) throw new ApiError(404, "vehicle not found")
     if(!vehicle?.activateQr) throw new ApiError(403, "QR code for this vehicle is deactivated")
 
-    const message = req?.body
-    if(!message) throw new ApiError(400, "message must be a string")
+    const  {message} = req?.body
+    if(!message) throw new ApiError(400, "message must be there")
+    const message_parsed = JSON.parse(message)
 
-    message.timestamp = new Date().toLocaleString()
+    console.log(" message---->" , message)
+
+    message_parsed.timestamp = new Date().toLocaleString()
 
 
     const captured_local = req?.file ? req?.file?.path : ""
@@ -317,10 +325,10 @@ const qrScanned = asyncHandler(async (req, res) => {
     if (!captured_upload?.url) throw new ApiError(400, "uploaded image is required")
 
     const isVehicle = await detectVehicle(captured_upload?.url)
-    if(isVehicle.error) throw new ApiError(400, isVehicle.message)
+    if(isVehicle.error) throw new ApiError(400, isVehicle.message  + "kya badva giri hai ")
     if(!isVehicle.isVehicle) throw new ApiError(400, "no vehicle detected in the captured image")
 
-    message.vehicleImage = captured_upload?.url
+    message_parsed.vehicleImage = captured_upload?.url
 
 
 
@@ -346,7 +354,7 @@ const qrScanned = asyncHandler(async (req, res) => {
     const chatSession = await ChatSession.create({
         vehicleId: vehicle._id,
         owner: vehicle.owner,
-        messages:[message]
+        messages:[message_parsed]
         
        
 
@@ -381,7 +389,7 @@ const qrScanned = asyncHandler(async (req, res) => {
 
 
 
-    const mailOptions = generateAlertEmail(vehicle?.ownerInfo[0]?.email , vehicle?.plateNumber , message?.message || "" , chatSession?._id)
+    const mailOptions = generateAlertEmail(vehicle?.ownerInfo[0]?.email , vehicle?.plateNumber , message_parsed?.message || "" , chatSession?._id)
 
 
     try {
