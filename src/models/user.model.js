@@ -14,7 +14,8 @@ const userschema = new Schema({
 
 
         lowercase:true,
-        trim:true
+        trim:true,
+        unique:true,
     },
 
     email:{

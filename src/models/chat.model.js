@@ -16,6 +16,12 @@ const chatModel = new Schema({
 
 
     messages:[{
+
+        id:{
+            type: String,
+            required: true,
+            unique: true
+        },
         senderType:{
             type: String,
             enum: ['owner', 'guest'],

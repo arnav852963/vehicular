@@ -10,15 +10,16 @@ export const socketHandler =  (io , socket) =>{
 
 
             if( payload?.type ===   "SEND_NEW_MESSAGE") {
-                const {sessionId , text} = payload?.payload
-                if(!sessionId || !text){
+                const {sessionId , text , id} = payload?.payload
+                if(!sessionId || !text || !id){
                     callback({success: false , message: "Invalid payload"})
                     return
                 }
 
-                io.to(sessionId).emit("NEW_MESSAGE" , {
+                socket.to(sessionId).emit("NEW_MESSAGE" , {
                     senderType: socket?.userType,
-                    message: text
+                    message: text,
+                    id: id
                 })
 
                 callback({success: true , message: "Message sent successfully"})
@@ -32,7 +33,8 @@ export const socketHandler =  (io , socket) =>{
                             messages: {
                                 senderType: socket?.userType,
                                 message: text,
-                                timestamp: new Date().toLocaleString()
+                                timestamp: new Date().toLocaleString(),
+                                id: id
                             }
                         }
 
@@ -75,6 +77,13 @@ export const socketHandler =  (io , socket) =>{
 
                 socket.to(socket?.sessionId).emit("STOP_TYPING" )
 
+                break;
+
+            }
+
+            case "RECEIVED":{
+
+                socket.to(socket?.sessionId).emit("MESSAGE_RECEIVED" , payload?.payload)
                 break;
 
             }
