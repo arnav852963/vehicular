@@ -16,12 +16,32 @@ const upload = async (local_str)=> {
     try {
 
         if (!local_str) return "path not defined"/*throw new ApiError(401, "path empty")*/
-        return await cloudinary.uploader.upload(local_str, {
+        const result = await cloudinary.uploader.upload(local_str, {
             resource_type: "auto"
         })
+
+
+        try {
+            if (local_str && fs.existsSync(local_str)) fs.unlinkSync(local_str)
+        } catch (_) {
+
+        }
+
+        return result
     } catch (e){
         fs.unlinkSync(local_str)
         throw new ApiError(401,e.message)
     }
 }
-export {upload}
+
+const destroyByPublicId = async (publicId, resourceType = "image") => {
+    try {
+        if (!publicId) return null
+        return await cloudinary.uploader.destroy(publicId, { resource_type: resourceType })
+    } catch (e) {
+        // don't throw from cleanup
+        return null
+    }
+}
+
+export {upload, destroyByPublicId}

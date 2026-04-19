@@ -4,7 +4,7 @@ import {ApiResponse} from "../utilities/ApiResponse.js";
 import {asyncHandler} from "../utilities/asyncHandler.js";
 import {AUDIT} from "../models/auditlogs.model.js";
 import {createAccessRefreshToken} from "./auth.controller.js";
-import {upload} from "../utilities/cloudinary.js";
+import {destroyByPublicId, upload} from "../utilities/cloudinary.js";
 import {ChatSession} from "../models/chat.model.js";
 
 
@@ -113,25 +113,31 @@ const logout = asyncHandler(async (req, res) => {
 })
 
 const updateAvatar = asyncHandler(async (req, res) => {
-   if(!req.file) throw new ApiError(401, "file not found");
+    let uploaded = null;
+    try {
+        if(!req.file) throw new ApiError(401, "file not found");
 
-   const local_avatar = req?.file?.path
-    if(!local_avatar) throw new ApiError(401, "local avatar path not found");
+        const local_avatar = req?.file?.path
+        if(!local_avatar) throw new ApiError(401, "local avatar path not found");
 
-    const upload_avatar = await upload(local_avatar);
-    if(!upload_avatar.url) throw new ApiError(401, "avatar not uploaded to  cloud");
+        uploaded = await upload(local_avatar);
+        if(!uploaded?.url) throw new ApiError(401, "avatar not uploaded to cloud");
 
-    const user = await User.findByIdAndUpdate(req?.user?._id  , {
-        $set:{
-            avatar: upload_avatar?.url
+        const user = await User.findByIdAndUpdate(req?.user?._id  , {
+            $set:{
+                avatar: uploaded?.url
+            }
+        } , {new:true}).select("-refreshToken")
+
+        if(!user) throw new ApiError(401, "user avatar not updated");
+
+        return res.status(200).json(new ApiResponse(200, {} , "user avatar updated"));
+    } catch (e) {
+        if (uploaded?.public_id) {
+            await destroyByPublicId(uploaded.public_id, uploaded.resource_type || "image")
         }
-    } , {new:true}).select("-refreshToken")
-
-    if(!user) throw new ApiError(401, "user avatar not  updated");
-
-    console.log(user.refreshToken);
-
-    return res.status(200).json(new ApiResponse(200, {} , "user avatar updated"));
+        throw e
+    }
 
 
 

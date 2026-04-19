@@ -5,7 +5,7 @@ import {asyncHandler} from "../utilities/asyncHandler.js";
 import {AUDIT} from "../models/auditlogs.model.js";
 import {nanoid} from "nanoid";
 import QRCode from "qrcode";
-import {upload} from "../utilities/cloudinary.js";
+import {destroyByPublicId, upload} from "../utilities/cloudinary.js";
 import {Vehicle} from "../models/vehicle.model.js";
 import {ChatSession} from "../models/chat.model.js";
 import dotenv from "dotenv";
@@ -19,6 +19,9 @@ dotenv.config({
 });
 
 const createVehicle = asyncHandler(async (req, res) => {
+
+    const uploadedAssets = [];
+    try {
 
 
     const {vehicleType , plateNumber ,  description} = req?.body
@@ -44,6 +47,10 @@ const createVehicle = asyncHandler(async (req, res) => {
         const result = await upload(file?.path);
         if(!result || !result?.url) throw new ApiError(500 , "error in uploading image");
         urls.push(result?.url);
+
+        if (result?.public_id) {
+            uploadedAssets.push({ publicId: result.public_id, resourceType: result.resource_type || "image" })
+        }
     }
 
     const qrImage = await QRCode.toDataURL(frontendScanUrl, {
@@ -85,6 +92,13 @@ const createVehicle = asyncHandler(async (req, res) => {
     return res.status(201).json(new ApiResponse(201 , {
 
     } , "vehicle created successfully"))
+
+    } catch (e) {
+        if (uploadedAssets.length) {
+            await Promise.allSettled(uploadedAssets.map((a) => destroyByPublicId(a.publicId, a.resourceType)))
+        }
+        throw e
+    }
 
 
 
@@ -201,6 +215,8 @@ const getAllUserVehicles = asyncHandler(async (req, res) => {
 
 
 const updateVehicleImage = asyncHandler(async (req, res) => {
+    const uploadedAssets = [];
+    try {
         const {vehicleId} = req?.params;
     if (!vehicleId) throw new ApiError(400, "vehicleId is required");
 
@@ -214,6 +230,10 @@ const updateVehicleImage = asyncHandler(async (req, res) => {
         const result = await upload(file?.path);
         if(!result || !result?.url) throw new ApiError(500 , "error in uploading image");
         urls.push(result?.url);
+
+        if (result?.public_id) {
+            uploadedAssets.push({ publicId: result.public_id, resourceType: result.resource_type || "image" })
+        }
     }
 
     const vehicle = await Vehicle.findByIdAndUpdate(vehicleId , {
@@ -239,6 +259,13 @@ const updateVehicleImage = asyncHandler(async (req, res) => {
 
         if(!log) throw new ApiError(400 , `log was not created for vehicle image update`)
     return res.status(200).json(new ApiResponse(200, vehicle, "vehicle image updated successfully"))
+
+    } catch (e) {
+        if (uploadedAssets.length) {
+            await Promise.allSettled(uploadedAssets.map((a) => destroyByPublicId(a.publicId, a.resourceType)))
+        }
+        throw e
+    }
 
 
 
@@ -284,6 +311,8 @@ const deleteVehicle = asyncHandler(async (req, res) => {
 
 
 const qrScanned = asyncHandler(async (req, res) => {
+    let uploadedAsset = null;
+    try {
     const {qrId} = req?.params;
 
     if(!qrId) throw new ApiError(400, "qrId is required");
@@ -323,6 +352,10 @@ const qrScanned = asyncHandler(async (req, res) => {
     const captured_upload = await upload(captured_local);
 
     if (!captured_upload?.url) throw new ApiError(400, "uploaded image is required")
+
+    if (captured_upload?.public_id) {
+        uploadedAsset = { publicId: captured_upload.public_id, resourceType: captured_upload.resource_type || "image" }
+    }
 
     const isVehicle = await detectVehicle(captured_upload?.url)
     if(isVehicle.error) throw new ApiError(400, isVehicle.message  + "kya badva giri hai ")
@@ -409,6 +442,13 @@ const qrScanned = asyncHandler(async (req, res) => {
         sessionId: chatSession._id.toString(),
 
     }, "QR code scanned successfully"))
+
+    } catch (e) {
+        if (uploadedAsset?.publicId) {
+            await destroyByPublicId(uploadedAsset.publicId, uploadedAsset.resourceType)
+        }
+        throw e
+    }
 
 
 
