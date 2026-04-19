@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 
 import {socketHandler} from "./socketHandler.js";
+import {asyncHandler} from "../utilities/asyncHandler.js";
 
 dotenv.config(
     {
@@ -14,31 +15,65 @@ dotenv.config(
 
 console.log(process.env.ACCESS_TOKEN_SECRET)
 
-io.use(async (socket , next) =>{
+io.use(asyncHandler( async (socket , next) =>{
 
-    const {sessionId =''} = socket?.handshake?.auth || {};
+    const auth = socket?.handshake?.auth || {};
 
+if(!auth) {
+    const rawCookies = socket?.handshake?.headers?.cookie;
 
-
-
-
-    const rawCookies   = socket?.handshake?.headers?.cookie;
-
+    if(!rawCookies) throw new ApiError(400, "sessionId and senderType are required in auth or cookies")
 
 
-    if(rawCookies) {
+
         try {
+
+
+            const cookies = cookie.parse(rawCookies)
+
+
+            if (!cookies) throw new ApiError(400, "cant parse the cookie")
+
+            const decodeToken = await jwt.verify(cookies?.accessToken, process.env.ACCESS_TOKEN_SECRET)
+
+
+            if (!decodeToken) throw new ApiError(401, "Unauthorized")
+
+            socket.userType = 'owner'
+            socket.userId = decodeToken?._id
+            socket.sessionId = sessionId
+
+            return next()
+        } catch (e) {
+            throw e
+        }
+
+
+}
+
+    const {sessionId ='' , senderType =""} = auth
+
+
+
+
+
+
+
+    if(senderType ==="owner" ) {
+        try {
+            const rawCookies   = socket?.handshake?.headers?.cookie;
+            if(!rawCookies) throw new ApiError(400, "sessionId and senderType are required in auth or cookies")
 
 
         const cookies = cookie.parse(rawCookies)
 
 
-        if (!cookies) return  next(new ApiError(400, "cant parse the cookie"))
+        if (!cookies) throw new ApiError(400, "cant parse the cookie")
 
         const decodeToken = await jwt.verify(cookies?.accessToken, process.env.ACCESS_TOKEN_SECRET)
 
 
-        if (!decodeToken) return  next( new ApiError(401, "Unauthorized"))
+        if (!decodeToken) throw new ApiError(401, "Unauthorized")
 
         socket.userType = 'owner'
         socket.userId = decodeToken?._id
@@ -62,7 +97,7 @@ io.use(async (socket , next) =>{
 
 
 
-})
+}))
 
 
 io.on('connection' , (socket) =>{

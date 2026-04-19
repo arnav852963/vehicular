@@ -36,7 +36,7 @@ const createVehicle = asyncHandler(async (req, res) => {
     const uniqueQrId = nanoidUpperAlnum()
 
 
-    const frontendScanUrl = `${process.env.FRONTEND_URL}/scan/${uniqueQrId}`;
+
     if(!req?.files || !req?.files?.vehicleImages || req?.files?.vehicleImages?.length === 0) throw new ApiError(400 , "vehicle image is required");
     const localFilePathArray = req?.files?.vehicleImages
 
@@ -53,15 +53,7 @@ const createVehicle = asyncHandler(async (req, res) => {
         }
     }
 
-    const qrImage = await QRCode.toDataURL(frontendScanUrl, {
-        errorCorrectionLevel: 'H',
-        margin: 2,
-        width: 300,
-        color: {
-            dark: '#000000',
-            light: '#ffffff'
-        }
-    });
+
 
 
     const vehicle = await Vehicle.create({
@@ -149,7 +141,7 @@ const getVehicle = asyncHandler(async (req, res) => {
     if (vehicle.owner.toString() !== req?.user?._id.toString()) throw new ApiError(403, "you are not authorized to view this vehicle")
 
 
-    const frontendScanUrl = `${process.env.FRONTEND_URL}/scan/${vehicle?.qrId}`;
+    const frontendScanUrl = `${process.env.FRONTEND_URL}/scan/${vehicle?.qrId}/guest`;
 
     const qrImage = await QRCode.toDataURL(frontendScanUrl, {
         errorCorrectionLevel: 'H',
@@ -179,7 +171,7 @@ const getQr = asyncHandler(async (req, res) => {
     if (vehicle.owner.toString() !== req?.user?._id.toString()) throw new ApiError(403, "you are not authorized to view this vehicle")
 
 
-    const frontendScanUrl = `${process.env.FRONTEND_URL}/scan/${vehicle?.qrId}`;
+    const frontendScanUrl = `${process.env.FRONTEND_URL}/scan/${vehicle?.qrId}/guest`;
 
     const qrImage = await QRCode.toDataURL(frontendScanUrl, {
         errorCorrectionLevel: 'H',
