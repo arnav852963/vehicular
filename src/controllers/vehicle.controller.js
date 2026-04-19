@@ -374,7 +374,7 @@ const qrScanned = asyncHandler(async (req, res) => {
         if(!log_1) throw new ApiError(400 , `log was not created for qr scanned`)
 
 
-
+message_parsed.received  = true
 
     const chatSession = await ChatSession.create({
         vehicleId: vehicle._id,

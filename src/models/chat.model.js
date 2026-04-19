@@ -39,6 +39,11 @@ const chatModel = new Schema({
 
         },
 
+        received:{
+            type: Boolean,
+            default: false
+        },
+
         timestamp:{
             type: String,
             default: new Date().toLocaleString()

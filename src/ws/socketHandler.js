@@ -1,4 +1,6 @@
 import {ChatSession} from "../models/chat.model.js";
+import {asyncHandler} from "../utilities/asyncHandler.js";
+import {ApiError} from "../utilities/ApiError.js";
 
 
 
@@ -63,7 +65,7 @@ export const socketHandler =  (io , socket) =>{
     })
 
 
-    socket.on("client_action" , async (payload , callback)=>{
+    socket.on("client_action" ,asyncHandler( async (payload , callback)=>{
 
         switch (payload?.type) {
 
@@ -84,6 +86,20 @@ export const socketHandler =  (io , socket) =>{
             case "RECEIVED":{
 
                 socket.to(socket?.sessionId).emit("MESSAGE_RECEIVED" , payload?.payload)
+
+                const receivedMessage = await ChatSession.findOneAndUpdate({id:payload?.payload} , {
+
+                    $set:{
+                        received:true
+                    }
+
+
+
+
+                } , {new:true})
+
+                if(!receivedMessage) throw new ApiError(500 , "Failed to update message as received in db")
+
                 break;
 
             }
@@ -95,7 +111,7 @@ export const socketHandler =  (io , socket) =>{
         }
 
 
-    })
+    }))
 
 
 
