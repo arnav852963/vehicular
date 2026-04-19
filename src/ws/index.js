@@ -5,7 +5,6 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 
 import {socketHandler} from "./socketHandler.js";
-import {asyncHandler} from "../utilities/asyncHandler.js";
 
 dotenv.config(
     {
@@ -15,14 +14,18 @@ dotenv.config(
 
 console.log(process.env.ACCESS_TOKEN_SECRET)
 
-io.use(asyncHandler( async (socket , next) =>{
+io.use(async (socket , next) =>{
 
     const auth = socket?.handshake?.auth || {};
 
-if(!auth) {
+
+if(!auth || Object.keys(auth).length === 0) {
+
+
+    console.log("no auth found in the handshake, trying to parse cookies")
     const rawCookies = socket?.handshake?.headers?.cookie;
 
-    if(!rawCookies) throw new ApiError(400, "sessionId and senderType are required in auth or cookies")
+    if(!rawCookies) return next(new ApiError(400, "sessionId and senderType are required in auth or cookies"))
 
 
 
@@ -32,26 +35,34 @@ if(!auth) {
             const cookies = cookie.parse(rawCookies)
 
 
-            if (!cookies) throw new ApiError(400, "cant parse the cookie")
+            if (!cookies) return next(new ApiError(400, "cant parse the cookie"))
 
             const decodeToken = await jwt.verify(cookies?.accessToken, process.env.ACCESS_TOKEN_SECRET)
 
 
-            if (!decodeToken) throw new ApiError(401, "Unauthorized")
+            if (!decodeToken) return next(new ApiError(401, "Unauthorized"))
 
             socket.userType = 'owner'
             socket.userId = decodeToken?._id
-            socket.sessionId = sessionId
+
+            socket.sessionId = undefined
 
             return next()
         } catch (e) {
-            throw e
+        console.log("indhr hi error" , e)
+            return next(new ApiError(401, e?.message || "Unauthorized"))
+
         }
 
 
 }
 
     const {sessionId ='' , senderType =""} = auth
+
+    if(!sessionId || !senderType) {
+        return next(new ApiError(400, "sessionId and senderType are required in auth or cookies"))
+
+    }
 
 
 
@@ -62,18 +73,18 @@ if(!auth) {
     if(senderType ==="owner" ) {
         try {
             const rawCookies   = socket?.handshake?.headers?.cookie;
-            if(!rawCookies) throw new ApiError(400, "sessionId and senderType are required in auth or cookies")
+            if(!rawCookies) return next(new ApiError(400, "sessionId and senderType are required in auth or cookies"))
 
 
         const cookies = cookie.parse(rawCookies)
 
 
-        if (!cookies) throw new ApiError(400, "cant parse the cookie")
+        if (!cookies) return next(new ApiError(400, "cant parse the cookie"))
 
         const decodeToken = await jwt.verify(cookies?.accessToken, process.env.ACCESS_TOKEN_SECRET)
 
 
-        if (!decodeToken) throw new ApiError(401, "Unauthorized")
+        if (!decodeToken) return next(new ApiError(401, "Unauthorized"))
 
         socket.userType = 'owner'
         socket.userId = decodeToken?._id
@@ -97,7 +108,7 @@ if(!auth) {
 
 
 
-}))
+})
 
 
 io.on('connection' , (socket) =>{

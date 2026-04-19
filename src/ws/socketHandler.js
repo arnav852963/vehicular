@@ -1,6 +1,5 @@
 import {ChatSession} from "../models/chat.model.js";
-import {asyncHandler} from "../utilities/asyncHandler.js";
-import {ApiError} from "../utilities/ApiError.js";
+
 
 
 
@@ -27,9 +26,6 @@ export const socketHandler =  (io , socket) =>{
                 callback({success: true , message: "Message sent successfully"})
 
                 try {
-
-
-
                     const newMessage = await ChatSession.findByIdAndUpdate(sessionId, {
                         $push: {
                             messages: {
@@ -65,7 +61,8 @@ export const socketHandler =  (io , socket) =>{
     })
 
 
-    socket.on("client_action" ,asyncHandler( async (payload , callback)=>{
+    socket.on("client_action" , async (payload , callback)=>{
+
 
         switch (payload?.type) {
 
@@ -87,18 +84,22 @@ export const socketHandler =  (io , socket) =>{
 
                 socket.to(socket?.sessionId).emit("MESSAGE_RECEIVED" , payload?.payload)
 
-                const receivedMessage = await ChatSession.findOneAndUpdate({id:payload?.payload} , {
+                try {
 
-                    $set:{
-                        received:true
+                    const receivedMessage = await ChatSession.findOneAndUpdate(
+                        { "messages.id": payload?.payload },
+                        { $set: { "messages.$.received": true } },
+                        { new: true }
+                    )
+
+                    if(!receivedMessage) {
+                        return callback?.({success:false , message:"Failed to update message as received in db"})
                     }
 
-
-
-
-                } , {new:true})
-
-                if(!receivedMessage) throw new ApiError(500 , "Failed to update message as received in db")
+                    return callback?.({success:true})
+                } catch (e) {
+                    return callback?.({success:false , message: e?.message || "Failed to update message as received"})
+                }
 
                 break;
 
@@ -111,7 +112,7 @@ export const socketHandler =  (io , socket) =>{
         }
 
 
-    }))
+    })
 
 
 
