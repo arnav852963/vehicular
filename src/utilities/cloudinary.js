@@ -3,10 +3,9 @@ import fs from "fs";
 import dotenv from "dotenv";
 import { ApiError } from "./ApiError.js";
 
-dotenv.config({
-    path:'./.env'
-})
-console.log("check if .env" , process.env.CLOUDINARY_API_KEY)
+if (process.env.NODE_ENV !== "production") {
+    dotenv.config({ path: "./.env" })
+}
 cloudinary.config({
     cloud_name:process.env.CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,

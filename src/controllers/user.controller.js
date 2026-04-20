@@ -12,9 +12,15 @@ import jwt from 'jsonwebtoken';
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 
-dotenv.config({
-    path: "./.env",
-})
+if (process.env.NODE_ENV !== "production") {
+    dotenv.config({ path: "./.env" })
+}
+
+const cookieOptions = {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+}
 
 const completeProfile = asyncHandler(async (req, res) => {
     const {username  ,  fullName} = req.body;
@@ -75,7 +81,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     if(!accessToken) throw new ApiError(401, "accessToken not found");
 
     return res.status(200)
-        .cookie('accessToken' , accessToken  , {http:true , secure:true})
+        .cookie('accessToken' , accessToken  , cookieOptions)
         .json(new ApiResponse(200 , {} , "token refreshed" ));
 
 

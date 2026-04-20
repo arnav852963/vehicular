@@ -8,18 +8,16 @@ import {Server} from "socket.io";
 
 
 
-
-
-dotenv.config({
-    path:"./.env"
-})
+if (process.env.NODE_ENV !== "production") {
+    dotenv.config({ path: "./.env" })
+}
 
 const app =express();
 
 const httpserver = createServer(app)
 
 
-const  allowedOrigins = [process.env.CORS_ORIGIN ]
+const  allowedOrigins = process.env.CORS_ORIGIN
 const io = new Server(httpserver , {
     cors:{
         origin:allowedOrigins,

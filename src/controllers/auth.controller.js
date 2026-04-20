@@ -8,9 +8,15 @@ import {AUDIT} from "../models/auditlogs.model.js";
 import jwt from 'jsonwebtoken';
 import dotenv from "dotenv";
 
-dotenv.config({
-    path: "./.env",
-})
+if (process.env.NODE_ENV !== "production") {
+    dotenv.config({ path: "./.env" })
+}
+
+const cookieOptions = {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+}
 
 
 
@@ -88,10 +94,7 @@ const googleAuth = asyncHandler(async (req, res) => {
         if(!accessToken) throw new ApiError(400 , `accessToken is missing`)
         if(!refreshToken) throw new ApiError(400 , `refreshToken is missing`)
 
-        const options  = {
-            httpOnly: true,
-            secure:true
-        }
+        const options = cookieOptions
 
         const log = await AUDIT.create({
             actorId: exist._id,
@@ -130,10 +133,7 @@ const googleAuth = asyncHandler(async (req, res) => {
     if(!accessToken) throw new ApiError(400 , `accessToken is missing`)
     if(!refreshToken) throw new ApiError(400 , `refreshToken is missing`)
 
-    const options  = {
-        httpOnly: true,
-        secure:true
-    }
+    const options = cookieOptions
 
     const log = await AUDIT.create({
         actorId: user._id,
@@ -176,10 +176,7 @@ const firebaseAuth = asyncHandler(async (req, res) => {
         if(!accessToken) throw new ApiError(400 , `accessToken is missing`)
         if(!refreshToken) throw new ApiError(400 , `refreshToken is missing`)
 
-        const options  = {
-            http: true,
-            secure:true
-        }
+        const options = cookieOptions
 
         const log = await AUDIT.create({
             actorId: exist._id,
@@ -214,11 +211,7 @@ const firebaseAuth = asyncHandler(async (req, res) => {
     if(!accessToken) throw new ApiError(400 , `accessToken is missing`)
     if(!refreshToken) throw new ApiError(400 , `refreshToken is missing`)
 
-    const options  = {
-        http: true,
-        secure: true
-
-    }
+    const options = cookieOptions
 
     const log = await AUDIT.create({
         actorId: user._id,

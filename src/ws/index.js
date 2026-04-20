@@ -6,13 +6,9 @@ import dotenv from "dotenv";
 
 import {socketHandler} from "./socketHandler.js";
 
-dotenv.config(
-    {
-        path: './.env'
-    }
-)
-
-console.log(process.env.ACCESS_TOKEN_SECRET)
+if (process.env.NODE_ENV !== "production") {
+    dotenv.config({ path: "./.env" })
+}
 
 io.use(async (socket , next) =>{
 

@@ -1,8 +1,8 @@
 import dotenv from "dotenv";
 
-dotenv.config({
-    path:'./.env'
-});
+if (process.env.NODE_ENV !== "production") {
+    dotenv.config({ path: "./.env" });
+}
 
 export const detectVehicle = async (imageUrl) => {
     const endpoint = `https://vision.googleapis.com/v1/images:annotate?key=${process.env.GOOGLE_CLOUD_VISION_KEY}`;

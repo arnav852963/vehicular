@@ -14,9 +14,9 @@ import {io} from "../app.js";
 import { customAlphabet } from "nanoid";
 import {detectVehicle} from "../utilities/cloudvision.js";
 
-dotenv.config({
-    path:"./.env"
-});
+if (process.env.NODE_ENV !== "production") {
+    dotenv.config({ path: "./.env" });
+}
 
 const createVehicle = asyncHandler(async (req, res) => {
 

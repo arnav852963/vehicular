@@ -1,9 +1,8 @@
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
-dotenv.config({
-    path: "./.env"
-
-})
+if (process.env.NODE_ENV !== "production") {
+    dotenv.config({ path: "./.env" })
+}
 export const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -15,7 +14,8 @@ export const transporter = nodemailer.createTransport({
 
 export const generateAlertEmail = (ownerEmail, plateNumber, messageText, sessionId) => {
 
-    const chatLink = `http://localhost:5173/chat/${sessionId}`;
+    const base = process.env.FRONTEND_URL || "http://localhost:5173";
+    const chatLink = `${base}/chat/${sessionId}`;
 
     return {
         from: `"ParkAlert System" <${process.env.EMAIL_USER}>`,
