@@ -2,8 +2,6 @@ import express from "express"
 import dotenv from "dotenv"
 import cors from "cors"
 import cookie from "cookie-parser"
-import fs from "fs";
-import path from "path";
 
 import {createServer} from "http"
 import {Server} from "socket.io";
@@ -36,17 +34,7 @@ app.use(cors({
 
 app.use(express.json({limit:'16kb'}));
 app.use(express.urlencoded({extended:true,limit:'16kb'}));
-
-const publicDir = path.resolve("public");
-if (fs.existsSync(publicDir)) {
-    app.use(express.static(publicDir));
-}
-
-const publicTempDir = path.resolve("public.temp");
-if (fs.existsSync(publicTempDir)) {
-    app.use("/public.temp", express.static(publicTempDir));
-}
-
+app.use(express.static("public"));
 app.use(cookie())
 
 
