@@ -19,7 +19,7 @@ const app =express();
 const httpserver = createServer(app)
 
 
-const  allowedOrigins = [process.env.CORS_ORIGIN , process.env.NETWORK_ORIGIN]
+const  allowedOrigins = [process.env.CORS_ORIGIN ]
 const io = new Server(httpserver , {
     cors:{
         origin:allowedOrigins,
