@@ -141,7 +141,7 @@ const getVehicle = asyncHandler(async (req, res) => {
     if (vehicle.owner.toString() !== req?.user?._id.toString()) throw new ApiError(403, "you are not authorized to view this vehicle")
 
 
-    const frontendScanUrl = `${process.env.FRONTEND_URL}/scan/${vehicle?.qrId}/guest`;
+    const frontendScanUrl = `${process.env.FRONTEND_URL}/scan/${vehicle?.qrId}`;
 
     const qrImage = await QRCode.toDataURL(frontendScanUrl, {
         errorCorrectionLevel: 'H',
@@ -171,7 +171,7 @@ const getQr = asyncHandler(async (req, res) => {
     if (vehicle.owner.toString() !== req?.user?._id.toString()) throw new ApiError(403, "you are not authorized to view this vehicle")
 
 
-    const frontendScanUrl = `${process.env.FRONTEND_URL}/scan/${vehicle?.qrId}/guest`;
+    const frontendScanUrl = `${process.env.FRONTEND_URL}/scan/${vehicle?.qrId}`;
 
     const qrImage = await QRCode.toDataURL(frontendScanUrl, {
         errorCorrectionLevel: 'H',
