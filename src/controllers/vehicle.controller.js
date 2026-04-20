@@ -414,24 +414,16 @@ message_parsed.received  = true
 
 
 
-    const mailOptions = generateAlertEmail(vehicle?.ownerInfo[0]?.email , vehicle?.plateNumber , message_parsed?.message || "" , chatSession?._id)
 
-
-    try {
-            const info = await transporter.sendMail(mailOptions)
-            if(!info) throw new ApiError(500, "error in sending email")
-
-    } catch (e){
-
-            throw new ApiError(500, "error in sending alert email to vehicle owner")
-
-    }
 
 
 
     return res.status(200).json(new ApiResponse(200, {
 
         sessionId: chatSession._id.toString(),
+        ownerEmail: vehicle?.ownerInfo[0]?.email,
+        plateNumber: vehicle?.plateNumber,
+        messageSent: message_parsed?.message,
 
     }, "QR code scanned successfully"))
 
@@ -462,6 +454,85 @@ const getVehicleByQrId = asyncHandler(async (req, res) => {
 })
 
 
+const sendEmailToOwner = asyncHandler(async (req, res) => {
+
+    const {ownerEmail , plateNumber , messageSent , sessionId} = req?.body;
+    if(!ownerEmail || !ownerEmail.trim()) throw new ApiError(400, "ownerEmail is required")
+    if(!plateNumber || !plateNumber.trim()) throw new ApiError(400, "plateNumber is required")
+    if(!messageSent || !messageSent.trim()) throw new ApiError(400, "messageSent is required")
+    if(!sessionId || !sessionId.trim()) throw new ApiError(400, "sessionId is required")
+
+
+
+    try {
+
+
+        const mailOptions = generateAlertEmail(ownerEmail, plateNumber, messageSent, sessionId)
+
+
+        const info = await transporter.sendMail(mailOptions)
+        if (!info) {
+
+            const log = await AUDIT.create({
+                actorId: null,
+                ipAddress: req.ip,
+                action:'EMAIL_FAILED',
+                metadata:{
+                    ownerEmail,
+                    plateNumber,
+                    sessionId
+                } }  )
+
+                if(!log) throw new ApiError(400 , `log was not created for email send failure`)
+
+
+            throw new ApiError(500, "error in sending email")
+
+
+
+        }
+
+        const log = await AUDIT.create({
+            actorId: null,
+            ipAddress: req.ip,
+            action:'EMAIL_SENT',
+            metadata:{
+                ownerEmail,
+                plateNumber,
+                sessionId
+            } }  )
+
+            if(!log) throw new ApiError(400 , `log was not created for email sent success`)
+
+        res.status(200).json(new ApiResponse(200, {}, "alert email sent to vehicle owner successfully"))
+
+    } catch (e) {
+
+        const log = await AUDIT.create({
+            actorId: null,
+            ipAddress: req.ip,
+            action:'EMAIL_FAILED',
+            metadata:{
+                ownerEmail,
+                plateNumber,
+                sessionId
+            } }  )
+
+        if(!log) throw new ApiError(400 , `log was not created for email send failure`)
+
+        throw new ApiError(500, "error in sending alert email to vehicle owner")
+
+    }
+
+
+
+
+
+
+
+})
+
+
 
 export {
     createVehicle,
@@ -472,7 +543,8 @@ export {
     qrScanned,
     getQr,
     getVehicleByQrId,
-    activateDeactivateVehicleQr
+    activateDeactivateVehicleQr,
+    sendEmailToOwner
 }
 
 

@@ -25,7 +25,9 @@ const auditlogSchema = new Schema({
             'VEHICLE_DELETED',
             'QR_SCANNED',
             'ALERT_SENT',
-            'CHAT_STARTED'
+            'CHAT_STARTED' ,
+            "EMAIL_SENT",
+            "EMAIL_FAILED",
         ]
     },
 

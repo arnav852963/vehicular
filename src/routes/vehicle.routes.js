@@ -5,7 +5,7 @@ import {
 	deleteVehicle,
 	getAllUserVehicles, getQr,
 	getVehicle, getVehicleByQrId,
-	qrScanned,
+	qrScanned, sendEmailToOwner,
 	updateVehicleImage,
 } from "../controllers/vehicle.controller.js";
 import {jwt_auth} from "../middlewares/auth.middleware.js";
@@ -35,5 +35,5 @@ vehicleRoutes.route("/getQr/:vehicleId").get(jwt_auth, getQr);
 vehicleRoutes.route("/qrScanned/:qrId").post(  upload_mul.single("captured") ,  qrScanned);
 vehicleRoutes.route("/getVehicleByQrId/:qrId").get(getVehicleByQrId);
 vehicleRoutes.route("/activateQr/:vehicleId").patch(jwt_auth, activateDeactivateVehicleQr);
-
+vehicleRoutes.route("/sendEmail").post(sendEmailToOwner)
 export default vehicleRoutes;
