@@ -37,7 +37,12 @@ app.use(express.urlencoded({extended:true,limit:'16kb'}));
 app.use(express.static("public"));
 app.use(cookie())
 
-
+app.get("/" , (req, res) => {
+    res.status(200).json({
+        success:true,
+        message:"welcome to carpool backend"
+    })
+})
 
 import authRoutes from "./routes/auth.routes.js";
 
