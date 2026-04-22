@@ -379,7 +379,8 @@ message_parsed.received  = true
     const chatSession = await ChatSession.create({
         vehicleId: vehicle._id,
         owner: vehicle.owner,
-        messages:[message_parsed]
+        messages:[message_parsed],
+        firstMessage: message_parsed?.message
         
        
 

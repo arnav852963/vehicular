@@ -160,6 +160,12 @@ const getUserChatSessions = asyncHandler(async (req, res) => {
             from:"chatsessions",
             localField:"_id",
             foreignField:"owner",
+            pipeline: [{
+                $project:{
+                    _id: 1,
+                    firstMessage: 1,
+                }
+            }],
             as:"chats"
         }
 

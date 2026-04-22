@@ -27,6 +27,9 @@ const chatModel = new Schema({
             enum: ['owner', 'guest'],
             required: true
         },
+        firstMessage:{
+            type : String
+        },
         message:{
             type: String,
              required: true
