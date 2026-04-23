@@ -81,9 +81,7 @@ const createVehicle = asyncHandler(async (req, res) => {
     })
     if(!log) throw new ApiError(400 , `log was not created for vehicle creation`)
 
-    return res.status(201).json(new ApiResponse(201 , {
-
-    } , "vehicle created successfully"))
+    return res.status(201).json(new ApiResponse(201 , vehicle, "vehicle created successfully"))
 
     } catch (e) {
         if (uploadedAssets.length) {
