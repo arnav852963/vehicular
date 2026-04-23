@@ -12,10 +12,18 @@ if (process.env.NODE_ENV !== "production") {
     dotenv.config({ path: "./.env" })
 }
 
-const cookieOptions = {
+const accessCookieOptions = {
     httpOnly: true,
     secure: true,
     sameSite: "none",
+    maxAge: 24 * 60 * 60 * 1000,
+}
+
+const refreshCookieOptions = {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
 }
 
 
@@ -94,7 +102,8 @@ const googleAuth = asyncHandler(async (req, res) => {
         if(!accessToken) throw new ApiError(400 , `accessToken is missing`)
         if(!refreshToken) throw new ApiError(400 , `refreshToken is missing`)
 
-        const options = cookieOptions
+        const accessOptions = accessCookieOptions
+        const refreshOptions = refreshCookieOptions
 
         const log = await AUDIT.create({
             actorId: exist._id,
@@ -110,8 +119,8 @@ const googleAuth = asyncHandler(async (req, res) => {
 
 
        return res.status(201)
-            .cookie('accessToken', accessToken, options)
-            .cookie('refreshToken', refreshToken, options)
+            .cookie('accessToken', accessToken, accessOptions)
+            .cookie('refreshToken', refreshToken, refreshOptions)
             .json(new ApiResponse(201  , exist , "user created and authorised"))
 
 
@@ -133,7 +142,8 @@ const googleAuth = asyncHandler(async (req, res) => {
     if(!accessToken) throw new ApiError(400 , `accessToken is missing`)
     if(!refreshToken) throw new ApiError(400 , `refreshToken is missing`)
 
-    const options = cookieOptions
+    const accessOptions = accessCookieOptions
+    const refreshOptions = refreshCookieOptions
 
     const log = await AUDIT.create({
         actorId: user._id,
@@ -146,8 +156,8 @@ const googleAuth = asyncHandler(async (req, res) => {
     if(!log) throw new ApiError(400 , `log was not created for login`)
 
    return  res.status(201)
-        .cookie('accessToken', accessToken, options)
-        .cookie('refreshToken', refreshToken, options)
+        .cookie('accessToken', accessToken, accessOptions)
+        .cookie('refreshToken', refreshToken, refreshOptions)
         .json(new ApiResponse(201  , user , "user created and authorised"))
 
 
@@ -176,7 +186,8 @@ const firebaseAuth = asyncHandler(async (req, res) => {
         if(!accessToken) throw new ApiError(400 , `accessToken is missing`)
         if(!refreshToken) throw new ApiError(400 , `refreshToken is missing`)
 
-        const options = cookieOptions
+        const accessOptions = accessCookieOptions
+        const refreshOptions = refreshCookieOptions
 
         const log = await AUDIT.create({
             actorId: exist._id,
@@ -189,8 +200,8 @@ const firebaseAuth = asyncHandler(async (req, res) => {
         if(!log) throw new ApiError(400 , `log was not created for login`)
 
         return res.status(201)
-            .cookie('accessToken', accessToken, options)
-            .cookie('refreshToken', refreshToken, options)
+            .cookie('accessToken', accessToken, accessOptions)
+            .cookie('refreshToken', refreshToken, refreshOptions)
             .json(new ApiResponse(201  , {} , "user created and authorised"))
 
 
@@ -211,7 +222,8 @@ const firebaseAuth = asyncHandler(async (req, res) => {
     if(!accessToken) throw new ApiError(400 , `accessToken is missing`)
     if(!refreshToken) throw new ApiError(400 , `refreshToken is missing`)
 
-    const options = cookieOptions
+    const accessOptions = accessCookieOptions
+    const refreshOptions = refreshCookieOptions
 
     const log = await AUDIT.create({
         actorId: user._id,
@@ -225,8 +237,8 @@ const firebaseAuth = asyncHandler(async (req, res) => {
 
 
     return  res.status(201)
-        .cookie('accessToken', accessToken, options)
-        .cookie('refreshToken', refreshToken, options)
+        .cookie('accessToken', accessToken, accessOptions)
+        .cookie('refreshToken', refreshToken, refreshOptions)
         .json(new ApiResponse(201  , {} , "user created and authorised"))
 
 

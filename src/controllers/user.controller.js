@@ -16,10 +16,18 @@ if (process.env.NODE_ENV !== "production") {
     dotenv.config({ path: "./.env" })
 }
 
-const cookieOptions = {
+const accessCookieOptions = {
     httpOnly: true,
     secure: true,
     sameSite: "none",
+    maxAge: 24 * 60 * 60 * 1000,
+}
+
+const refreshCookieOptions = {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
 }
 
 const completeProfile = asyncHandler(async (req, res) => {
@@ -81,7 +89,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     if(!accessToken) throw new ApiError(401, "accessToken not found");
 
     return res.status(200)
-        .cookie('accessToken' , accessToken  , cookieOptions)
+        .cookie('accessToken' , accessToken  , accessCookieOptions)
         .json(new ApiResponse(200 , {} , "token refreshed" ));
 
 
