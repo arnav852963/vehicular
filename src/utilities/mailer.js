@@ -5,12 +5,13 @@ if (process.env.NODE_ENV !== "production") {
 }
 export const transporter = nodemailer.createTransport({
     host:"smtp.gmail.com",
-    secure: false,
-    port: Number(process.env.EMAIL_PORT) || 587,
+    secure: true,
+    port: 465,
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
-    }
+    },
+    connectionTimeout: 10000
 });
 
 
