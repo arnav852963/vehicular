@@ -4,7 +4,7 @@ if (process.env.NODE_ENV !== "production") {
     dotenv.config({ path: "./.env" })
 }
 export const transporter = nodemailer.createTransport({
-    service: "gmail",
+    host:"smtp.gmail.com",
     secure: false,
     port: Number(process.env.EMAIL_PORT) || 587,
     auth: {
