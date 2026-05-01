@@ -362,10 +362,11 @@ const qrScanned = asyncHandler(async (req, res) => {
 
     const isVehicle = await detectVehicle(urls)
 
-        isVehicle.forEach((img) =>{
-            if(img.error) throw new ApiError(400, isVehicle.message  + "kya badva giri hai ")
-            if(!img.isVehicle) throw new ApiError(400, "no vehicle detected in the captured image")
-        })
+        for (const img of isVehicle) {
+            if (img?.error) throw new ApiError(400, img?.message || "cloud vision error");
+            if (!img?.isVehicle) throw new ApiError(400, "no vehicle detected in the captured image");
+        }
+
 
 
     message_parsed.vehicleImage = urls
