@@ -4,16 +4,15 @@ if (process.env.NODE_ENV !== "production") {
     dotenv.config({ path: "./.env" })
 }
 export const transporter = nodemailer.createTransport({
-    host:"smtp.gmail.com",
-    secure: true,
-    port: Number(process.env.EMAIL_PORT) || 587,
+    host: process.env.BREVO_SMTP_HOST || "smtp-relay.brevo.com",
+    secure: false,
+    port: Number(process.env.BREVO_SMTP_PORT || 587),
     auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
+        user: process.env.BREVO_SMTP_USER,
+        pass: process.env.BREVO_SMTP_PASS
     },
-    connectionTimeout: 10000,
     tls: {
-        rejectUnauthorized: false
+        servername: process.env.BREVO_SMTP_HOST || "smtp-relay.brevo.com"
     }
 });
 
@@ -24,7 +23,7 @@ export const generateAlertEmail = (ownerEmail, plateNumber, messageText, session
     const chatLink = `${base}/chat/${sessionId}`;
 
     return {
-        from: `"ParkAlert System" <${process.env.EMAIL_USER}>`,
+        from: process.env.EMAIL_FROM || `"ParkAlert System" <${process.env.BREVO_SMTP_USER || process.env.EMAIL_USER}>`,
         to: ownerEmail,
         subject: `Vehicle Notification: Action needed for ${plateNumber}`,
 
