@@ -12,15 +12,15 @@ import "./ws/index.js";
 
 db().then(  async ()=>{
 
-    try {
+    const shouldVerifySMTP =
+        process.env.VERIFY_SMTP_ON_STARTUP === "true" ||
+        process.env.NODE_ENV !== "production";
 
-        await transporter.verify()
-        console.log("mail transporter is ready to send mails");
-
-    } catch (e) {
-
-        console.log("error in mail transporter " , e.message);
-
+    if (shouldVerifySMTP) {
+        transporter
+            .verify()
+            .then(() => console.log("mail transporter is ready to send mails"))
+            .catch((e) => console.log("error in mail transporter ", e.message));
     }
 
     httpserver.on('error' , (error) =>{
