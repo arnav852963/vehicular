@@ -11,6 +11,11 @@ export const transporter = nodemailer.createTransport({
         user: process.env.BREVO_SMTP_USER,
         pass: process.env.BREVO_SMTP_PASS
     },
+    pool: true,
+    maxConnections: 5,
+    maxMessages: 100,
+    connectionTimeout: Number(process.env.SMTP_CONNECTION_TIMEOUT_MS || 20000),
+    socketTimeout: Number(process.env.SMTP_SOCKET_TIMEOUT_MS || 20000),
     tls: {
         servername: process.env.BREVO_SMTP_HOST || "smtp-relay.brevo.com"
     }
