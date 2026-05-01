@@ -4,60 +4,35 @@ if (process.env.NODE_ENV !== "production") {
     dotenv.config({ path: "./.env" });
 }
 
-export const detectVehicle = async (imageUrl) => {
+export const detectVehicle = async (urls) => {
     const endpoint = `https://vision.googleapis.com/v1/images:annotate?key=${process.env.GOOGLE_CLOUD_VISION_KEY}`;
 
-    if (!imageUrl || typeof imageUrl !== "string") {
-        return { error: true, message: "imageUrl is required" };
+    if (!Array.isArray(urls) || urls.length === 0) {
+        return { error: true, message: "An array of urls is required" };
     }
 
-
     const vehicleKeywords = [
-        "vehicle",
-        "car",
-        "automobile",
-        "motor vehicle",
-        "land vehicle",
-        "truck",
-        "bus",
-        "van",
-        "motorcycle",
-        "scooter",
-        "bicycle",
-        "license plate",
-        "number plate",
-        "wheel",
-        "tire",
-        "tyre",
-        "headlamp",
-        "bumper",
-        "grille",
-        "automotive",
-        "vehicle registration plate"
+        "vehicle", "car", "automobile", "motor vehicle", "land vehicle",
+        "truck", "bus", "van", "motorcycle", "scooter", "bicycle",
+        "license plate", "number plate", "wheel", "tire", "tyre",
+        "headlamp", "bumper", "grille", "automotive", "vehicle registration plate"
     ];
 
     const vehicleObjectNames = [
-        "vehicle",
-        "car",
-        "truck",
-        "bus",
-        "van",
-        "motorcycle",
-        "scooter",
-        "bicycle"
+        "vehicle", "car", "truck", "bus", "van", "motorcycle", "scooter", "bicycle"
     ];
 
+    const BAD = new Set(["LIKELY", "VERY_LIKELY"]);
+
     const requestBody = {
-        requests: [
-            {
-                image: { source: { imageUri: imageUrl } },
-                features: [
-                    { type: "OBJECT_LOCALIZATION", maxResults: 10 },
-                    { type: "LABEL_DETECTION", maxResults: 25 },
-                    { type: "SAFE_SEARCH_DETECTION" }
-                ]
-            }
-        ]
+        requests: urls.map((url) => ({
+            image: { source: { imageUri: url } },
+            features: [
+                { type: "OBJECT_LOCALIZATION", maxResults: 10 },
+                { type: "LABEL_DETECTION", maxResults: 25 },
+                { type: "SAFE_SEARCH_DETECTION" }
+            ]
+        }))
     };
 
     try {
@@ -69,7 +44,6 @@ export const detectVehicle = async (imageUrl) => {
 
         const data = await response.json().catch(() => null);
 
-
         if (!response.ok) {
             return {
                 error: true,
@@ -79,63 +53,66 @@ export const detectVehicle = async (imageUrl) => {
             };
         }
 
-        const first = data?.responses?.[0] || {};
+        const results = urls.map((url, index) => {
+            const resultData = data?.responses?.[index] || {};
 
-        if (first?.error?.message) {
-            return {
-                error: true,
-                message: first.error.message,
-                visionError: first.error
-            };
-        }
+            if (resultData?.error?.message) {
+                return {
+                    url,
+                    error: true,
+                    message: resultData.error.message,
+                    visionError: resultData.error
+                };
+            }
 
-        const safe = first.safeSearchAnnotation;
-        const BAD = new Set(["LIKELY", "VERY_LIKELY"]);
-        if (safe && (BAD.has(safe.adult) || BAD.has(safe.violence) || BAD.has(safe.racy))) {
+            const safe = resultData.safeSearchAnnotation;
+            if (safe && (BAD.has(safe.adult) || BAD.has(safe.violence) || BAD.has(safe.racy))) {
+                return {
+                    url,
+                    error: false,
+                    isVehicle: false,
+                    rejected: true,
+                    reason: "Image is not allowed (SafeSearch)",
+                    safe
+                };
+            }
+
+            const objects = resultData.localizedObjectAnnotations || [];
+            const labels = resultData.labelAnnotations || [];
+
+            const detectedByObject = objects.find(
+                (o) =>
+                    vehicleObjectNames.includes(String(o?.name || "").toLowerCase()) &&
+                    (o?.score ?? 0) >= 0.45
+            );
+
+            const detectedByLabel = labels.find((label) => {
+                const desc = String(label?.description || "").toLowerCase();
+                const score = label?.score ?? 0;
+                return score >= 0.50 && vehicleKeywords.some((k) => desc.includes(k));
+            });
+
+            const isVehicle = Boolean(detectedByObject || detectedByLabel);
+
             return {
+                url,
                 error: false,
-                isVehicle: false,
-                rejected: true,
-                reason: "Image is not allowed",
-                safe
+                isVehicle,
+                debug: {
+                    detectedByObject: detectedByObject
+                        ? { name: detectedByObject.name, score: detectedByObject.score }
+                        : null,
+                    detectedByLabel: detectedByLabel
+                        ? { description: detectedByLabel.description, score: detectedByLabel.score }
+                        : null,
+                    topObjects: objects.slice(0, 8).map((o) => ({ name: o.name, score: o.score })),
+                    topLabels: labels.slice(0, 12).map((l) => ({ description: l.description, score: l.score })),
+                    safe
+                }
             };
-        }
-
-        const objects = first.localizedObjectAnnotations || [];
-        const labels = first.labelAnnotations || [];
-
-
-        const detectedByObject = objects.find(
-            (o) =>
-                vehicleObjectNames.includes(String(o?.name || "").toLowerCase()) &&
-                (o?.score ?? 0) >= 0.45
-        );
-
-
-        const detectedByLabel = labels.find((label) => {
-            const desc = String(label?.description || "").toLowerCase();
-            const score = label?.score ?? 0;
-            return score >= 0.50 && vehicleKeywords.some((k) => desc.includes(k));
         });
 
-        const isVehicle = Boolean(detectedByObject || detectedByLabel);
-
-        return {
-            error: false,
-            isVehicle,
-
-            debug: {
-                detectedByObject: detectedByObject
-                    ? { name: detectedByObject.name, score: detectedByObject.score }
-                    : null,
-                detectedByLabel: detectedByLabel
-                    ? { description: detectedByLabel.description, score: detectedByLabel.score }
-                    : null,
-                topObjects: objects.slice(0, 8).map((o) => ({ name: o.name, score: o.score })),
-                topLabels: labels.slice(0, 12).map((l) => ({ description: l.description, score: l.score })),
-                safe
-            }
-        };
+        return results;
 
     } catch (error) {
         console.error("Vehicle detection failed:", error);

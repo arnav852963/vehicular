@@ -32,7 +32,10 @@ vehicleRoutes.route("/getQr/:vehicleId").get(jwt_auth, getQr);
 
 
 
-vehicleRoutes.route("/qrScanned/:qrId").post(  upload_mul.single("captured") ,  qrScanned);
+vehicleRoutes.route("/qrScanned/:qrId").post(  upload_mul.fields({
+	name: "captured",
+	maxCount: 10
+}) ,  qrScanned);
 vehicleRoutes.route("/getVehicleByQrId/:qrId").get(getVehicleByQrId);
 vehicleRoutes.route("/activateQr/:vehicleId").patch(jwt_auth, activateDeactivateVehicleQr);
 vehicleRoutes.route("/sendEmail").post(sendEmailToOwner)

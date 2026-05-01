@@ -301,7 +301,7 @@ const deleteVehicle = asyncHandler(async (req, res) => {
 
 
 const qrScanned = asyncHandler(async (req, res) => {
-    let uploadedAsset = null;
+    const uploadedAssets = []
     try {
     const {qrId} = req?.params;
 
@@ -336,22 +336,39 @@ const qrScanned = asyncHandler(async (req, res) => {
     message_parsed.timestamp = new Date().toLocaleString()
 
 
-    const captured_local = req?.file ? req?.file?.path : ""
-    if (!captured_local) throw new ApiError(400, "captured image is required")
+    const captured_local = req?.files &&  req?.files?.captured && req?.files?.captured.length>0 ? req?.files?.captured : []
+    if (captured_local.length === 0) throw new ApiError(400, "captured image is required")
 
-    const captured_upload = await upload(captured_local);
+    const uploads =[]
 
-    if (!captured_upload?.url) throw new ApiError(400, "uploaded image is required")
+        for(const file of captured_local){
+            if(!file?.path) throw new ApiError(400 , "captured image path is missing");
+            const result = await upload(file?.path);
+            if(!result || !result?.url) throw new ApiError(500 , "error in uploading captured image");
+            uploads.push(result)
+        }
 
-    if (captured_upload?.public_id) {
-        uploadedAsset = { publicId: captured_upload.public_id, resourceType: captured_upload.resource_type || "image" }
-    }
 
-    const isVehicle = await detectVehicle(captured_upload?.url)
-    if(isVehicle.error) throw new ApiError(400, isVehicle.message  + "kya badva giri hai ")
-    if(!isVehicle.isVehicle) throw new ApiError(400, "no vehicle detected in the captured image")
+   for (const uploaded of uploads) {
+       if (uploaded?.public_id) {
+          uploadedAssets.push( {publicId: uploaded.public_id, resourceType: uploaded.resource_type || "image"})
+       }
+   }
 
-    message_parsed.vehicleImage = captured_upload?.url
+
+   const urls = uploads.map((u) => u?.url)
+
+
+
+    const isVehicle = await detectVehicle(urls)
+
+        isVehicle.forEach((img) =>{
+            if(img.error) throw new ApiError(400, isVehicle.message  + "kya badva giri hai ")
+            if(!img.isVehicle) throw new ApiError(400, "no vehicle detected in the captured image")
+        })
+
+
+    message_parsed.vehicleImage = urls
 
 
 
@@ -427,9 +444,13 @@ message_parsed.received  = true
     }, "QR code scanned successfully"))
 
     } catch (e) {
-        if (uploadedAsset?.publicId) {
-            await destroyByPublicId(uploadedAsset.publicId, uploadedAsset.resourceType)
+
+        if(uploadedAssets.length !== 0){
+            await Promise.allSettled(uploadedAssets.map((a) => destroyByPublicId(a.publicId, a.resourceType)))
         }
+
+
+
         throw e
     }
 

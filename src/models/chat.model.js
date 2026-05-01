@@ -36,11 +36,11 @@ const chatModel = new Schema({
 
         },
 
-        vehicleImage:{
+        vehicleImage:[{
             type: String,
 
 
-        },
+        }],
 
         received:{
             type: Boolean,
