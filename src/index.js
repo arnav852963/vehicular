@@ -40,6 +40,8 @@ db().then(  async ()=>{
   })
 })
     .catch((e)=>{
+        console.log("error in mongo connection" , e.message);
       throw new ApiError(500 , `error in mongo ->${e.message}`)
+
 
     })
