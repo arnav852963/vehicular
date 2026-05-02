@@ -1,25 +1,127 @@
-import nodemailer from "nodemailer";
 import dotenv from "dotenv";
+
 if (process.env.NODE_ENV !== "production") {
-    dotenv.config({ path: "./.env" })
+    dotenv.config({ path: "./.env" });
 }
-export const transporter = nodemailer.createTransport({
-    host: process.env.BREVO_SMTP_HOST || "smtp-relay.brevo.com",
-    secure: false,
-    port: Number(process.env.BREVO_SMTP_PORT || 587),
-    auth: {
-        user: process.env.BREVO_SMTP_USER,
-        pass: process.env.BREVO_SMTP_PASS
-    },
-    pool: true,
-    maxConnections: 5,
-    maxMessages: 100,
-    connectionTimeout: Number(process.env.SMTP_CONNECTION_TIMEOUT_MS || 20000),
-    socketTimeout: Number(process.env.SMTP_SOCKET_TIMEOUT_MS || 20000),
-    tls: {
-        servername: process.env.BREVO_SMTP_HOST || "smtp-relay.brevo.com"
+
+const BREVO_API_KEY = process.env.BREVO_API_KEY;
+const BREVO_API_BASE = process.env.BREVO_API_BASE || "https://api.brevo.com/v3";
+
+async function brevoRequest(path, { method = "GET", body } = {}) {
+    if (!BREVO_API_KEY) {
+        throw new Error("BREVO_API_KEY is missing");
     }
-});
+
+    const res = await fetch(`${BREVO_API_BASE}${path}`, {
+        method,
+        headers: {
+            "api-key": BREVO_API_KEY,
+            "content-type": "application/json",
+            accept: "application/json"
+        },
+        body: body ? JSON.stringify(body) : undefined
+    });
+
+    const text = await res.text();
+    let json;
+    try {
+        json = text ? JSON.parse(text) : null;
+    } catch {
+        json = null;
+    }
+
+    if (!res.ok) {
+        const msg =
+            (json && (json.message || json.error || json.code)) ||
+            text ||
+            `Brevo request failed (${res.status})`;
+        const err = new Error(String(msg));
+        err.statusCode = res.status;
+        err.details = json;
+        throw err;
+    }
+
+    return json;
+}
+
+function parseFrom(from) {
+    const fallbackEmail = process.env.EMAIL_FROM_EMAIL || process.env.BREVO_SENDER_EMAIL || process.env.BREVO_SMTP_USER;
+    const fallbackName = process.env.EMAIL_FROM_NAME || "ParkAlert System";
+
+    if (!from) {
+        return { email: fallbackEmail, name: fallbackName };
+    }
+
+    if (typeof from === "string") {
+        const match = from.match(/^(?:\s*"?([^"<]+)"?\s*)?<([^>]+)>\s*$/);
+        if (match) {
+            return { name: (match[1] || fallbackName).trim(), email: match[2].trim() };
+        }
+        return { email: from.trim(), name: fallbackName };
+    }
+
+    if (typeof from === "object" && from.address) {
+        return { email: String(from.address), name: from.name ? String(from.name) : fallbackName };
+    }
+
+    return { email: fallbackEmail, name: fallbackName };
+}
+
+function parseRecipients(value) {
+    if (!value) return [];
+    if (Array.isArray(value)) {
+        return value
+            .map((v) => (typeof v === "string" ? { email: v } : v && v.address ? { email: v.address, name: v.name } : null))
+            .filter(Boolean);
+    }
+    if (typeof value === "string") {
+        return value
+            .split(",")
+            .map((x) => x.trim())
+            .filter(Boolean)
+            .map((email) => ({ email }));
+    }
+    if (typeof value === "object" && value.address) {
+        return [{ email: value.address, name: value.name }];
+    }
+    return [];
+}
+
+export const transporter = {
+    async verify() {
+        await brevoRequest("/account", { method: "GET" });
+        return true;
+    },
+
+    async sendMail(mailOptions = {}) {
+        const sender = parseFrom(mailOptions.from);
+        if (!sender.email) {
+            throw new Error("EMAIL_FROM_EMAIL (or BREVO_SENDER_EMAIL) is missing");
+        }
+
+        const to = parseRecipients(mailOptions.to);
+        if (!to.length) {
+            throw new Error("Missing recipient: to");
+        }
+
+        const payload = {
+            sender,
+            to,
+            subject: mailOptions.subject || "",
+            textContent: mailOptions.text || undefined,
+            htmlContent: mailOptions.html || undefined
+        };
+
+        const out = await brevoRequest("/smtp/email", { method: "POST", body: payload });
+
+        return {
+            messageId: out?.messageId,
+            accepted: to.map((r) => r.email),
+            rejected: [],
+            response: JSON.stringify(out)
+        };
+    }
+};
 
 
 export const generateAlertEmail = (ownerEmail, plateNumber, messageText, sessionId) => {
