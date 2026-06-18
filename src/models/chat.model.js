@@ -32,12 +32,13 @@ const chatModel = new Schema({
         },
         message:{
             type: String,
-             required: true
+
 
         },
 
         vehicleImage:[{
             type: String,
+            default: null
 
 
         }],
@@ -45,6 +46,11 @@ const chatModel = new Schema({
         received:{
             type: Boolean,
             default: false
+        },
+
+        audio:{
+            type: String,
+            default: null
         },
 
         timestamp:{

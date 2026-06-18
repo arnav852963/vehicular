@@ -105,6 +105,45 @@ export const socketHandler =  (io , socket) =>{
 
             }
 
+            case "SEND_AUDIO":{
+                const {audioUrl , id} = payload?.payload
+
+                if(!audioUrl || !id){
+                    return callback?.({success: false})
+                }
+
+                socket.to(socket?.sessionId).emit("NEW_AUDIO" , {
+                    senderType: socket?.userType,
+                    audio: audioUrl,
+                    id: id
+                })
+                callback({success: true})
+
+                try{
+
+                    const newMessage = await ChatSession.findByIdAndUpdate(socket?.sessionId, {
+                        $push: {
+                            messages: {
+                                senderType: socket?.userType,
+                                audio: audioUrl,
+                                timestamp: new Date().toLocaleString(),
+                                id: id
+                            }
+                        }
+
+                } , {new: true})
+
+
+
+                } catch (e){
+                    return callback({success:false})
+
+
+                }
+
+                break;
+            }
+
             default:{
                 console.log("Unknown action type: " , payload?.type)
             }
