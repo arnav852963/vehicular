@@ -34,8 +34,8 @@ jobs:
         with:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          application_name: 'Your-EB-Application-Name' # Change this to your EB App Name
-          environment_name: 'Your-EB-Environment-Name' # Change this to your EB Env Name
+          application_name: 'vehicular-app' # Change this to your EB App Name
+          environment_name: 'Vehicular-app-env' # Change this to your EB Env Name
           version_label: 'deploy-${{ github.sha }}'
-          region: 'us-east-1'                         # Change to your AWS region (e.g., ap-south-1)
+          region: 'ap-southeast-2'                         # Change to your AWS region (e.g., ap-south-1)
           deployment_package: deploy.zip
