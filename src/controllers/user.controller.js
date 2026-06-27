@@ -172,6 +172,7 @@ const getUserChatSessions = asyncHandler(async (req, res) => {
                 $project:{
                     _id: 1,
                     firstMessage: 1,
+                    createdAt: 1,
                 }
             }],
             as:"chats"

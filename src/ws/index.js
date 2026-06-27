@@ -136,7 +136,7 @@ socket.on('client_action' , (payload , callback)=>{
     socketHandler(io , socket)
 
     socket.on('disconnect' , ()=>{
-    socket.emit('DISCONNECTED' )
+    socket.to(socket.sessionId).emit('DISCONNECTED' )
     })
 
 
