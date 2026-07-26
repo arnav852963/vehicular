@@ -80,6 +80,18 @@ export const socketHandler =  (io , socket) =>{
 
             }
 
+            case "RECORDING_AUDIO":{
+                socket.to(socket?.sessionId).emit("RECORDING_AUDIO" )
+
+                break;
+            }
+
+            case "STOP_RECORDING_AUDIO":{
+                socket.to(socket?.sessionId).emit("STOP_RECORDING_AUDIO" )
+
+                break;
+            }
+
             case "RECEIVED":{
 
                 socket.to(socket?.sessionId).emit("MESSAGE_RECEIVED" , payload?.payload)
