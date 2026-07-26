@@ -13,6 +13,7 @@ import {generateAlertEmail, transporter} from "../utilities/mailer.js";
 import {io} from "../app.js";
 import { customAlphabet } from "nanoid";
 import {detectVehicle} from "../utilities/cloudvision.js";
+import {detectVehicleWithGroq} from "../utilities/groqVision.js";
 
 if (process.env.NODE_ENV !== "production") {
     dotenv.config({ path: "./.env" });
@@ -360,12 +361,10 @@ const qrScanned = asyncHandler(async (req, res) => {
 
 
 
-    const isVehicle = await detectVehicle(urls)
+    const isVehicle = await detectVehicleWithGroq(urls)
 
-        for (const img of isVehicle) {
-            if (img?.error) throw new ApiError(400, img?.message || "cloud vision error");
-            if (!img?.isVehicle) throw new ApiError(400, "no vehicle detected in the captured image");
-        }
+        if (isVehicle?.error) throw new ApiError(400, isVehicle?.message || "cloud vision error");
+        if (!isVehicle?.isVehicle) throw new ApiError(400, "no vehicle detected in the captured image");
 
 
 
