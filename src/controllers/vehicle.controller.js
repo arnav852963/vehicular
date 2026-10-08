@@ -5,7 +5,7 @@ import {asyncHandler} from "../utilities/asyncHandler.js";
 import {AUDIT} from "../models/auditlogs.model.js";
 import {nanoid} from "nanoid";
 import QRCode from "qrcode";
-import {destroyByPublicId, upload} from "../utilities/cloudinary.js";
+import {destroyByPublicId, resizedImageUrl, settleUploads, upload, uploadAll} from "../utilities/cloudinary.js";
 import {Vehicle} from "../models/vehicle.model.js";
 import {ChatSession} from "../models/chat.model.js";
 import dotenv from "dotenv";
@@ -13,7 +13,7 @@ import {generateAlertEmail, transporter} from "../utilities/mailer.js";
 import {io} from "../app.js";
 import { customAlphabet } from "nanoid";
 import {detectVehicle} from "../utilities/cloudvision.js";
-import {detectVehicleWithGroq} from "../utilities/groqVision.js";
+import {findVehicleImage} from "../utilities/groqVision.js";
 
 if (process.env.NODE_ENV !== "production") {
     dotenv.config({ path: "./.env" });
@@ -340,28 +340,21 @@ const qrScanned = asyncHandler(async (req, res) => {
     const captured_local = req?.files &&  req?.files?.captured && req?.files?.captured.length>0 ? req?.files?.captured : []
     if (captured_local.length === 0) throw new ApiError(400, "captured image is required")
 
-    const uploads =[]
+    if (captured_local.some((file) => !file?.path)) throw new ApiError(400 , "captured image path is missing");
 
-        for(const file of captured_local){
-            if(!file?.path) throw new ApiError(400 , "captured image path is missing");
-            const result = await upload(file?.path);
-            if(!result || !result?.url) throw new ApiError(500 , "error in uploading captured image");
-            uploads.push(result)
-        }
+    // upload all images in parallel and start vehicle detection as soon as the first one lands
+    const uploadPromises = uploadAll(captured_local.map((file) => file.path))
+    const detectionPromise = findVehicleImage(uploadPromises, resizedImageUrl)
 
+    // keep the images that uploaded, drop the ones that failed
+    const {uploaded, failed} = await settleUploads(uploadPromises)
+    uploaded.forEach((u) => uploadedAssets.push({publicId: u.public_id, resourceType: u.resource_type || "image"}))
+    if (failed.length) console.error(`${failed.length} captured image upload(s) failed:`, failed.map((e) => e?.message))
+    if (uploaded.length === 0) throw new ApiError(500, "error in uploading captured images")
 
-   for (const uploaded of uploads) {
-       if (uploaded?.public_id) {
-          uploadedAssets.push( {publicId: uploaded.public_id, resourceType: uploaded.resource_type || "image"})
-       }
-   }
+    const urls = uploaded.map((u) => u?.url)
 
-
-   const urls = uploads.map((u) => u?.url)
-
-
-
-    const isVehicle = await detectVehicleWithGroq(urls)
+    const isVehicle = await detectionPromise
 
         if (isVehicle?.error) throw new ApiError(400, isVehicle?.message || "cloud vision error");
         if (!isVehicle?.isVehicle) throw new ApiError(400, "no vehicle detected in the captured image");

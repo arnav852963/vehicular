@@ -47,3 +47,26 @@ export const detectVehicleWithGroq = async (publicUrls) => {
         return { error: true, message: error.message, isVehicle: false };
     }
 };
+
+// Checks images one at a time as their uploads finish, stopping at the first one classified as a vehicle.
+// Failed uploads are skipped. toUrl maps an upload result to the URL sent to the model.
+export const findVehicleImage = async (uploadPromises, toUrl) => {
+    let outcome = { error: true, message: "none of the captured images could be uploaded", isVehicle: false };
+
+    for (const uploadPromise of uploadPromises) {
+        let uploaded;
+        try {
+            uploaded = await uploadPromise;
+        } catch (_) {
+            continue;
+        }
+
+        const result = await detectVehicleWithGroq([toUrl(uploaded)]);
+        if (result.isVehicle) return result;
+
+        // prefer reporting a real "not a vehicle" answer over a model/network error
+        if (!result.error || outcome.error) outcome = result;
+    }
+
+    return outcome;
+};
