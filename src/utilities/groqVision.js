@@ -16,7 +16,8 @@ export const detectVehicleWithGroq = async (publicUrls) => {
 
 
         const response = await groq.chat.completions.create({
-            model: "qwen/qwen3.6-27b",
+            model: process.env.GROQ_VISION_MODEL || "qwen/qwen3.8-27b",
+            max_completion_tokens: 300,
             messages: [
                 {
                     role: "user",
