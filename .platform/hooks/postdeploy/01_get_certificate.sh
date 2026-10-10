@@ -6,13 +6,14 @@ sudo dnf install -y certbot python3-certbot-nginx
 # 2. Stop Nginx temporarily so standalone authenticator can use Port 80 without 404/redirect issues
 sudo systemctl stop nginx || true
 
-# 3. Obtain certificate via standalone authenticator and configure Nginx installer
-sudo certbot --authenticator standalone --installer nginx --non-interactive --agree-tos --email arnavticku@gmail.com -d vehicular-app-env.eba-tchumtwm.ap-southeast-2.elasticbeanstalk.com || true
+# 3. Obtain certificate via standalone authenticator and configure Nginx installer (--reinstall ensures Nginx is reconfigured after code deployments)
+sudo certbot --authenticator standalone --installer nginx --reinstall --non-interactive --agree-tos --email arnavticku@gmail.com -d vehicular-app-env.eba-tchumtwm.ap-southeast-2.elasticbeanstalk.com || sudo certbot --authenticator standalone --installer nginx --non-interactive --agree-tos --email arnavticku@gmail.com -d vehicular-app-env.eba-tchumtwm.ap-southeast-2.elasticbeanstalk.com || true
 
 # 4. Start Nginx back up with SSL configured
 sudo systemctl start nginx
 
-# 5. Reload Nginx to securely apply the changes
+# 5. Ensure Nginx SSL is actively installed and reload
+sudo certbot install --nginx --cert-name vehicular-app-env.eba-tchumtwm.ap-southeast-2.elasticbeanstalk.com --non-interactive || true
 sudo systemctl reload nginx
 
 # 6. Create a cron job to automatically renew the certificate before it expires
